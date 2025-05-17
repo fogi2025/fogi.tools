@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPT to PDF Converter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2C3E50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #3498DB;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            background-color: #e9ecef;
+        }
+        
+        .upload-area.active {
+            border-color: #2ECC71;
+            background-color: #e8f5e9;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background-color: #3498DB;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #2980B9;
+        }
+        
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #2ECC71;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .status {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .file-info {
+            display: none;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .download-section {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+        }
+        
+        .download-btn {
+            background-color: #2ECC71;
+            margin-top: 10px;
+        }
+        
+        .download-btn:hover {
+            background-color: #27AE60;
+        }
+        
+        .error-message {
+            color: #E74C3C;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .info-text {
+            margin-top: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #3498DB;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498DB;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PPT to PDF Converter</h1>
+        
+        <div id="uploadArea" class="upload-area">
+            <div class="icon">📁</div>
+            <p>Drag & Drop your PowerPoint file here</p>
+            <p>- or -</p>
+            <label for="fileInput" class="btn">Browse Files</label>
+            <input type="file" id="fileInput" class="file-input" accept=".ppt,.pptx">
+        </div>
+        
+        <div id="fileInfo" class="file-info">
+            <p>Selected file: <span id="fileName"></span></p>
+            <p>Size: <span id="fileSize"></span></p>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <div class="text-center">
+            <button id="convertBtn" class="btn" disabled>Convert to PDF</button>
+        </div>
+        
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar">
+                <div id="progressBar" class="progress"></div>
+            </div>
+            <p id="statusText" class="status">Processing... Please wait</p>
+        </div>
+        
+        <div id="downloadSection" class="download-section">
+            <div class="icon" style="color: #2ECC71;">✓</div>
+            <h3>Conversion Complete!</h3>
+            <p>Your PDF is ready to download</p>
+            <a id="downloadBtn" class="btn download-btn" href="#" download="converted.pdf">Download PDF</a>
+        </div>
+        
+        <p class="info-text">This tool converts PowerPoint presentations (PPT/PPTX) to PDF format directly in your browser. No files are uploaded to any server for processing.</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        // Initialize variables
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const convertBtn = document.getElementById('convertBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+        const downloadSection = document.getElementById('downloadSection');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        let selectedFile = null;
+        
+        // Add event listeners for drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('active');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('active');
+        }
+        
+        // Handle file drop
+        uploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            handleFiles(files);
+        }
+        
+        // Handle file selection via browse button
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+        
+        // Handle the selected files
+        function handleFiles(files) {
+            if (files.length > 0) {
+                selectedFile = files[0];
+                
+                // Check if the file is a PowerPoint file
+                if (selectedFile.name.endsWith('.ppt') || selectedFile.name.endsWith('.pptx')) {
+                    // Update file info
+                    fileName.textContent = selectedFile.name;
+                    fileSize.textContent = formatFileSize(selectedFile.size);
+                    fileInfo.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    convertBtn.removeAttribute('disabled');
+                } else {
+                    showError('Please select a PowerPoint file (.ppt or .pptx)');
+                    resetSelection();
+                }
+            }
+        }
+        
+        // Format file size to human-readable format
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // Reset file selection
+        function resetSelection() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            convertBtn.setAttribute('disabled', 'true');
+        }
+        
+        // Convert button click handler
+        convertBtn.addEventListener('click', async () => {
+            if (selectedFile) {
+                try {
+                    // Show progress
+                    progressContainer.style.display = 'block';
+                    convertBtn.setAttribute('disabled', 'true');
+                    
+                    // Update progress
+                    updateProgress(10, 'Reading PowerPoint file...');
+                    
+                    // Process the file
+                    const pdfData = await convertPptToPdf(selectedFile);
+                    
+                    // Create download link
+                    updateProgress(100, 'Conversion complete!');
+                    
+                    // Create blob URL for download
+                    const pdfBlob = new Blob([pdfData], { type: 'application/pdf' });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    
+                    // Update download button
+                    downloadBtn.href = pdfUrl;
+                    downloadBtn.download = selectedFile.name.replace(/\.(ppt|pptx)$/i, '.pdf');
+                    
+                    // Show download section
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        downloadSection.style.display = 'block';
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    progressContainer.style.display = 'none';
+                    showError('Error converting file: ' + error.message);
+                    convertBtn.removeAttribute('disabled');
+                }
+            }
+        });
+        
+        // Update progress bar
+        function updateProgress(percent, message) {
+            progressBar.style.width = percent + '%';
+            statusText.textContent = message;
+        }
+        
+        // Main conversion function
+        async function convertPptToPdf(file) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Read the file as ArrayBuffer
+                    const arrayBuffer = await readFileAsArrayBuffer(file);
+                    updateProgress(20, 'Extracting content...');
+                    
+                    // Load the file with JSZip
+                    const zip = new JSZip();
+                    const zipData = await zip.loadAsync(arrayBuffer);
+                    
+                    // Check if this is a valid PPTX file
+                    if (!zipData.files['[Content_Types].xml']) {
+                        throw new Error('Invalid PowerPoint file format');
+                    }
+                    
+                    updateProgress(30, 'Processing slides...');
+                    
+                    // Extract slide content and images
+                    const slideContents = [];
+                    const slideImages = {};
+                    const slideRelationships = {};
+                    
+                    // Find all slides
+                    const slideEntries = Object.keys(zipData.files).filter(
+                        name => name.startsWith('ppt/slides/slide') && name.endsWith('.xml')
+                    );
+                    
+                    // Sort slides by number
+                    slideEntries.sort((a, b) => {
+                        const numA = parseInt(a.match(/slide(\d+)\.xml/)[1]);
+                        const numB = parseInt(b.match(/slide(\d+)\.xml/)[1]);
+                        return numA - numB;
+                    });
+                    
+                    // Process each slide
+                    for (let i = 0; i < slideEntries.length; i++) {
+                        const slidePath = slideEntries[i];
+                        const slideNum = parseInt(slidePath.match(/slide(\d+)\.xml/)[1]);
+                        
+                        // Get slide content
+                        const slideXml = await zipData.files[slidePath].async('text');
+                        slideContents.push({ num: slideNum, content: slideXml });
+                        
+                        // Get slide relationships
+                        const relPath = slidePath.replace('.xml', '.xml.rels').replace('slides/', 'slides/_rels/');
+                        if (zipData.files[relPath]) {
+                            const relXml = await zipData.files[relPath].async('text');
+                            slideRelationships[slideNum] = relXml;
+                        }
+                        
+                        updateProgress(30 + Math.floor(40 * (i / slideEntries.length)), 
+                                      `Processing slide ${i + 1} of ${slideEntries.length}...`);
+                    }
+                    
+                    // Create PDF
+                    updateProgress(70, 'Creating PDF document...');
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'pt',
+                        format: 'a4'
+                    });
+                    
+                    // Process slides content for PDF
+                    for (let i = 0; i < slideContents.length; i++) {
+                        const slide = slideContents[i];
+                        
+                        if (i > 0) {
+                            doc.addPage();
+                        }
+                        
+                        // Extract text content
+                        const slideTitle = extractSlideTitle(slide.content);
+                        const slideText = extractSlideText(slide.content);
+                        
+                        // Add title
+                        if (slideTitle) {
+                            doc.setFontSize(24);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(slideTitle, 40, 60);
+                        }
+                        
+                        // Add text content
+                        if (slideText.length > 0) {
+                            doc.setFontSize(16);
+                            doc.setFont('helvetica', 'normal');
+                            
+                            let yPosition = 100;
+                            slideText.forEach(text => {
+                                if (text.trim()) {
+                                    // Wrap text to fit page width
+                                    const textLines = doc.splitTextToSize(text, doc.internal.pageSize.width - 80);
+                                    doc.text(textLines, 40, yPosition);
+                                    yPosition += 20 * textLines.length;
+                                }
+                            });
+                        }
+                        
+                        updateProgress(70 + Math.floor(20 * (i / slideContents.length)), 
+                                      `Adding slide ${i + 1} of ${slideContents.length} to PDF...`);
+                    }
+                    
+                    updateProgress(90, 'Finalizing PDF...');
+                    
+                    // Get PDF as array buffer
+                    const pdfOutput = doc.output('arraybuffer');
+                    resolve(pdfOutput);
+                    
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    reject(error);
+                }
+            });
+        }
+        
+        // Helper function to read file as ArrayBuffer
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // Extract slide title from XML content
+        function extractSlideTitle(xmlContent) {
+            const titleMatch = xmlContent.match(/<a:t>([^<]+)<\/a:t>/);
+            return titleMatch ? titleMatch[1] : '';
+        }
+        
+        // Extract slide text from XML content
+        function extractSlideText(xmlContent) {
+            const textMatches = xmlContent.match(/<a:t>([^<]+)<\/a:t>/g) || [];
+            return textMatches.map(match => {
+                const content = match.replace(/<a:t>|<\/a:t>/g, '');
+                return content;
+            });
+        }
+        
+        // Click handler for the upload area
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+    </script>
+</body>
+</html>

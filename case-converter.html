@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Converter Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .stats {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .stats p {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .copy-btn {
+            background-color: #27ae60;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .copy-btn:hover {
+            background-color: #219653;
+        }
+        
+        .clear-btn {
+            background-color: #e74c3c;
+        }
+        
+        .clear-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        @media (max-width: 600px) {
+            .buttons {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Case Converter Tool</h1>
+        
+        <textarea id="input-text" placeholder="Enter or paste your text here..."></textarea>
+        
+        <div class="buttons">
+            <button id="lowercase-btn">LOWERCASE</button>
+            <button id="uppercase-btn">UPPERCASE</button>
+            <button id="capitalize-btn">Capitalize</button>
+            <button id="title-case-btn">Title Case</button>
+            <button id="sentence-case-btn">Sentence case</button>
+            <button id="alternating-btn">AlTeRnAtInG</button>
+            <button id="inverse-btn">InVeRsE</button>
+            <button id="camel-case-btn">camelCase</button>
+            <button id="snake-case-btn">snake_case</button>
+            <button id="kebab-case-btn">kebab-case</button>
+            <button id="clear-btn" class="clear-btn">Clear</button>
+        </div>
+        
+        <button id="copy-btn" class="copy-btn">Copy to Clipboard</button>
+        
+        <div class="stats">
+            <p id="chars">Characters: 0</p>
+            <p id="words">Words: 0</p>
+            <p id="lines">Lines: 0</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputText = document.getElementById('input-text');
+            const copyBtn = document.getElementById('copy-btn');
+            const charsElement = document.getElementById('chars');
+            const wordsElement = document.getElementById('words');
+            const linesElement = document.getElementById('lines');
+            
+            // Update statistics whenever text changes
+            inputText.addEventListener('input', updateStats);
+            
+            function updateStats() {
+                const text = inputText.value;
+                const chars = text.length;
+                const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+                const lines = text === '' ? 0 : text.split(/\r\n|\r|\n/).length;
+                
+                charsElement.textContent = `Characters: ${chars}`;
+                wordsElement.textContent = `Words: ${words}`;
+                linesElement.textContent = `Lines: ${lines}`;
+            }
+            
+            // Case conversion functions
+            document.getElementById('lowercase-btn').addEventListener('click', () => {
+                inputText.value = inputText.value.toLowerCase();
+                updateStats();
+            });
+            
+            document.getElementById('uppercase-btn').addEventListener('click', () => {
+                inputText.value = inputText.value.toUpperCase();
+                updateStats();
+            });
+            
+            document.getElementById('capitalize-btn').addEventListener('click', () => {
+                inputText.value = capitalizeFirstLetter(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('title-case-btn').addEventListener('click', () => {
+                inputText.value = toTitleCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('sentence-case-btn').addEventListener('click', () => {
+                inputText.value = toSentenceCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('alternating-btn').addEventListener('click', () => {
+                inputText.value = toAlternatingCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('inverse-btn').addEventListener('click', () => {
+                inputText.value = toInverseCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('camel-case-btn').addEventListener('click', () => {
+                inputText.value = toCamelCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('snake-case-btn').addEventListener('click', () => {
+                inputText.value = toSnakeCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('kebab-case-btn').addEventListener('click', () => {
+                inputText.value = toKebabCase(inputText.value);
+                updateStats();
+            });
+            
+            document.getElementById('clear-btn').addEventListener('click', () => {
+                inputText.value = '';
+                updateStats();
+            });
+            
+            // Copy to clipboard functionality
+            copyBtn.addEventListener('click', () => {
+                inputText.select();
+                document.execCommand('copy');
+                
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            });
+            
+            // Helper functions for case conversion
+            function capitalizeFirstLetter(text) {
+                return text.charAt(0).toUpperCase() + text.slice(1);
+            }
+            
+            function toTitleCase(text) {
+                return text.replace(/\w\S*/g, function(word) {
+                    return word.charAt(0).toUpperCase() + word.substr(1).toLowerCase();
+                });
+            }
+            
+            function toSentenceCase(text) {
+                return text.replace(/(^\s*|[.!?]\s+)([a-z])/g, function(match, p1, p2) {
+                    return p1 + p2.toUpperCase();
+                }).charAt(0).toUpperCase() + text.slice(1);
+            }
+            
+            function toAlternatingCase(text) {
+                return text.split('').map((char, index) => 
+                    index % 2 === 0 ? char.toLowerCase() : char.toUpperCase()
+                ).join('');
+            }
+            
+            function toInverseCase(text) {
+                return text.split('').map(char => {
+                    if (char === char.toUpperCase()) {
+                        return char.toLowerCase();
+                    } else {
+                        return char.toUpperCase();
+                    }
+                }).join('');
+            }
+            
+            function toCamelCase(text) {
+                return text.trim().replace(/[\s-_]+(.)/g, (_, c) => c.toUpperCase())
+                    .replace(/^[A-Z]/, c => c.toLowerCase())
+                    .replace(/[^\w]/g, '');
+            }
+            
+            function toSnakeCase(text) {
+                return text.trim()
+                    .replace(/([a-z])([A-Z])/g, '$1_$2')
+                    .replace(/[\s-]+/g, '_')
+                    .toLowerCase()
+                    .replace(/[^\w_]/g, '');
+            }
+            
+            function toKebabCase(text) {
+                return text.trim()
+                    .replace(/([a-z])([A-Z])/g, '$1-$2')
+                    .replace(/[\s_]+/g, '-')
+                    .toLowerCase()
+                    .replace(/[^\w-]/g, '');
+            }
+        });
+    </script>
+</body>
+</html>

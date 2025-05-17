@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF to Excel Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">PDF to Excel Converter</h1>
+    <input type="file" id="pdfInput" accept=".pdf" class="mb-4 w-full p-2 border rounded">
+    <button id="convertBtn" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Convert to Excel</button>
+    <a id="downloadLink" class="hidden mt-4 w-full bg-green-500 text-white p-2 rounded text-center hover:bg-green-600">Download Excel</a>
+    <p id="status" class="mt-4 text-center text-gray-600"></p>
+  </div>
+
+  <script>
+    // Configure pdf.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+    document.getElementById('convertBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('pdfInput');
+      const status = document.getElementById('status');
+      const downloadLink = document.getElementById('downloadLink');
+
+      if (!fileInput.files.length) {
+        status.textContent = 'Please upload a PDF file.';
+        return;
+      }
+
+      status.textContent = 'Processing...';
+      const file = fileInput.files[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+      let extractedText = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        extractedText.push(pageText);
+      }
+
+      // Simple parsing: split text by spaces and newlines to simulate rows/columns
+      const rows = extractedText.join(' ').split('\n').map(row => row.trim().split(/\s+/));
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+
+      // Update download link
+      downloadLink.href = url;
+      downloadLink.download = 'converted.xlsx';
+      downloadLink.classList.remove('hidden');
+      status.textContent = 'Conversion complete!';
+    });
+  </script>
+</body>
+</html>

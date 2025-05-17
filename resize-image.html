@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-section {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: #4CAF50;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            width: 120px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #downloadLink {
+            display: none;
+            margin-top: 20px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <p>Click to upload an image</p>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+        </div>
+        <img id="imagePreview" alt="Preview">
+        
+        <div class="controls">
+            <input type="number" id="width" placeholder="Width" min="1">
+            <input type="number" id="height" placeholder="Height" min="1">
+            <button onclick="resizeImage()">Resize Image</button>
+            <label>
+                <input type="checkbox" id="maintainRatio" checked> Maintain Aspect Ratio
+            </label>
+        </div>
+        
+        <a id="downloadLink" download>Download Resized Image</a>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const maintainRatio = document.getElementById('maintainRatio');
+        const downloadLink = document.getElementById('downloadLink');
+        
+        let originalWidth, originalHeight, aspectRatio;
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.style.display = 'block';
+                    imagePreview.src = e.target.result;
+                    
+                    // Get original dimensions
+                    const img = new Image();
+                    img.onload = function() {
+                        originalWidth = img.width;
+                        originalHeight = img.height;
+                        aspectRatio = originalWidth / originalHeight;
+                        
+                        widthInput.value = originalWidth;
+                        heightInput.value = originalHeight;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Maintain aspect ratio logic
+        widthInput.addEventListener('input', updateHeight);
+        heightInput.addEventListener('input', updateWidth);
+
+        function updateHeight() {
+            if (maintainRatio.checked) {
+                heightInput.value = Math.round(widthInput.value / aspectRatio);
+            }
+        }
+
+        function updateWidth() {
+            if (maintainRatio.checked) {
+                widthInput.value = Math.round(heightInput.value * aspectRatio);
+            }
+        }
+
+        function resizeImage() {
+            const width = widthInput.value;
+            const height = heightInput.value;
+            
+            if (!width || !height) {
+                alert('Please enter both width and height');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.drawImage(imagePreview, 0, 0, width, height);
+            
+            // Create download link
+            downloadLink.href = canvas.toDataURL(fileInput.files[0].type);
+            downloadLink.download = `resized-image-${width}x${height}.${fileInput.files[0].name.split('.').pop()}`;
+            downloadLink.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

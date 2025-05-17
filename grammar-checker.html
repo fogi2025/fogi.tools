@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Checker Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        
+        .input-section, .output-section {
+            margin-bottom: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .stat-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            flex: 1;
+            min-width: 120px;
+            border-radius: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .suggestion {
+            margin-bottom: 10px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .suggestion-type {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #e67e22;
+        }
+        
+        .suggestion-detail {
+            margin-bottom: 5px;
+        }
+        
+        .corrected-text {
+            background-color: #e8f4fd;
+            padding: 8px;
+            border-radius: 4px;
+            color: #2980b9;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+        
+        #grammar-feedback {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .no-issues {
+            text-align: center;
+            padding: 15px;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Grammar Checker Tool</h1>
+        
+        <div class="input-section">
+            <textarea id="text-input" placeholder="Enter your text here to check grammar, spelling and more..."></textarea>
+            <div style="margin-top: 15px; text-align: center;">
+                <button id="check-button">Check Grammar</button>
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-label">Word Count</div>
+                    <div class="stat-value" id="word-count">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Character Count</div>
+                    <div class="stat-value" id="char-count">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Sentences</div>
+                    <div class="stat-value" id="sentence-count">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Issues Found</div>
+                    <div class="stat-value" id="issue-count">0</div>
+                </div>
+            </div>
+            
+            <div class="results">
+                <h2>Grammar Feedback</h2>
+                <div id="grammar-feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Common grammar issues to check
+        const commonGrammarRules = [
+            {
+                type: "Double Negative",
+                regex: /\b(don't|doesn't|didn't|can't|cannot|won't|wouldn't|couldn't|shouldn't|isn't|aren't|wasn't|weren't|haven't|hasn't|hadn't)\b.{1,30}\b(no|not|nobody|nothing|nowhere|never)\b/gi,
+                message: "Avoid using double negatives as they can confuse the reader.",
+                getSuggestion: (match) => {
+                    // Simple fix - remove one negative
+                    return match.replace(/\b(no|not|nobody|nothing|nowhere|never)\b/gi, "any");
+                }
+            },
+            {
+                type: "Subject-Verb Agreement",
+                regex: /\b(he|she|it|the \w+)\s+(are|were|have|do|don't)\b/gi,
+                message: "The subject and verb don't agree in number.",
+                getSuggestion: (match) => {
+                    return match
+                        .replace(/\b are\b/gi, " is")
+                        .replace(/\b were\b/gi, " was")
+                        .replace(/\b have\b/gi, " has")
+                        .replace(/\b do\b/gi, " does")
+                        .replace(/\b don't\b/gi, " doesn't");
+                }
+            },
+            {
+                type: "Passive Voice",
+                regex: /\b(am|is|are|was|were|be|been|being)\s+(\w+ed|built|sung|known|done|gone|written|said|made|taken)\b/gi,
+                message: "Consider using active voice for clearer, stronger writing.",
+                getSuggestion: (match) => {
+                    // No specific suggestion, just highlight
+                    return "[Consider rewording to active voice]";
+                }
+            },
+            {
+                type: "Run-on Sentence",
+                regex: /[a-z][.?!]\s+[a-z]/gi,
+                message: "This might be a run-on sentence. Consider breaking it into shorter sentences or using proper punctuation.",
+                getSuggestion: (match) => {
+                    // Replace the space with a period and capitalize
+                    return match.charAt(0) + match.charAt(1) + " " + match.charAt(3).toUpperCase() + match.slice(4);
+                }
+            },
+            {
+                type: "Commonly Confused Words",
+                patterns: [
+                    { find: /\b(your)\s+(going|doing|working|trying)\b/gi, replace: "you're", message: "Did you mean 'you're' (contraction of 'you are')?" },
+                    { find: /\b(their)\s+(going|doing|working|trying)\b/gi, replace: "they're", message: "Did you mean 'they're' (contraction of 'they are')?" },
+                    { find: /\b(its)\s+(going|doing|working|trying)\b/gi, replace: "it's", message: "Did you mean 'it's' (contraction of 'it is')?" },
+                    { find: /\b(there)\s+(books|car|house|dog|cat|items|things)\b/gi, replace: "their", message: "Did you mean 'their' (possessive form)?" },
+                    { find: /\beffect\s+(on|of)\b/gi, replace: "affect", message: "Did you mean 'affect' (verb meaning to influence)?" },
+                    { find: /\bto\s+much\b/gi, replace: "too much", message: "Did you mean 'too much'?" },
+                    { find: /\bthen\s+(again|once more|furthermore)\b/gi, replace: "than", message: "Did you mean 'than' (used for comparison)?" }
+                ],
+                checkAndSuggest: (text) => {
+                    const issues = [];
+                    this.patterns.forEach(pattern => {
+                        const matches = text.match(pattern.find);
+                        if (matches) {
+                            matches.forEach(match => {
+                                issues.push({
+                                    original: match,
+                                    suggestion: match.replace(pattern.find, pattern.replace),
+                                    message: pattern.message
+                                });
+                            });
+                        }
+                    });
+                    return issues;
+                }
+            },
+            {
+                type: "Repeated Words",
+                regex: /\b(\w+)\s+\1\b/gi,
+                message: "You have a repeated word here.",
+                getSuggestion: (match) => {
+                    const words = match.split(/\s+/);
+                    return words[0]; // Just return one instance of the word
+                }
+            }
+        ];
+
+        // Spelling errors (a very simple list for demonstration)
+        const commonMisspellings = {
+            "accomodate": "accommodate",
+            "recieve": "receive",
+            "seperate": "separate",
+            "definately": "definitely",
+            "occured": "occurred",
+            "untill": "until",
+            "beleive": "believe",
+            "wierd": "weird",
+            "acheive": "achieve",
+            "thier": "their",
+            "reccomend": "recommend",
+            "arguement": "argument",
+            "goverment": "government",
+            "tommorrow": "tomorrow",
+            "embarass": "embarrass",
+            "allright": "all right",
+            "accross": "across",
+            "begining": "beginning",
+            "concious": "conscious",
+            "publically": "publicly",
+            "alot": "a lot",
+            "shouldnt": "shouldn't",
+            "couldnt": "couldn't",
+            "wouldnt": "wouldn't",
+            "cant": "can't",
+            "isnt": "isn't",
+            "arent": "aren't",
+            "dont": "don't",
+            "didnt": "didn't",
+            "hasnt": "hasn't",
+            "havent": "haven't",
+        };
+
+        // Initialize the tool
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('text-input');
+            const checkButton = document.getElementById('check-button');
+            const wordCount = document.getElementById('word-count');
+            const charCount = document.getElementById('char-count');
+            const sentenceCount = document.getElementById('sentence-count');
+            const issueCount = document.getElementById('issue-count');
+            const grammarFeedback = document.getElementById('grammar-feedback');
+            
+            // Update statistics in real-time as the user types
+            textInput.addEventListener('input', function() {
+                updateTextStats(this.value);
+            });
+            
+            // Perform grammar check when the button is clicked
+            checkButton.addEventListener('click', function() {
+                checkGrammar(textInput.value);
+            });
+            
+            function updateTextStats(text) {
+                // Count words (split by spaces and filter out empty strings)
+                const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+                wordCount.textContent = words;
+                
+                // Count characters (including spaces)
+                charCount.textContent = text.length;
+                
+                // Count sentences (roughly by splitting on ., !, or ?)
+                const sentences = text.trim() ? text.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
+                sentenceCount.textContent = sentences;
+            }
+            
+            function checkGrammar(text) {
+                let issues = [];
+                
+                // Check spelling
+                issues = issues.concat(checkSpelling(text));
+                
+                // Check grammar rules
+                commonGrammarRules.forEach(rule => {
+                    if (rule.regex) {
+                        const matches = text.match(rule.regex);
+                        if (matches) {
+                            matches.forEach(match => {
+                                issues.push({
+                                    type: rule.type,
+                                    original: match,
+                                    message: rule.message,
+                                    suggestion: rule.getSuggestion(match)
+                                });
+                            });
+                        }
+                    }
+                });
+                
+                // Update the issue count and display feedback
+                issueCount.textContent = issues.length;
+                displayFeedback(issues);
+            }
+            
+            function checkSpelling(text) {
+                const issues = [];
+                const words = text.match(/\b\w+\b/g) || [];
+                
+                words.forEach(word => {
+                    const lowercase = word.toLowerCase();
+                    if (commonMisspellings[lowercase]) {
+                        issues.push({
+                            type: "Spelling Error",
+                            original: word,
+                            message: `"${word}" appears to be misspelled.`,
+                            suggestion: commonMisspellings[lowercase]
+                        });
+                    }
+                });
+                
+                return issues;
+            }
+            
+            function displayFeedback(issues) {
+                grammarFeedback.innerHTML = '';
+                
+                if (issues.length === 0) {
+                    grammarFeedback.innerHTML = '<div class="no-issues">No grammar or spelling issues detected. Great job!</div>';
+                    return;
+                }
+                
+                issues.forEach(issue => {
+                    const suggestionElement = document.createElement('div');
+                    suggestionElement.className = 'suggestion';
+                    
+                    const typeElement = document.createElement('div');
+                    typeElement.className = 'suggestion-type';
+                    typeElement.textContent = issue.type;
+                    
+                    const detailElement = document.createElement('div');
+                    detailElement.className = 'suggestion-detail';
+                    detailElement.innerHTML = `<strong>Found:</strong> "${issue.original}"<br><strong>Issue:</strong> ${issue.message}`;
+                    
+                    const correctedElement = document.createElement('div');
+                    correctedElement.className = 'corrected-text';
+                    correctedElement.textContent = `Suggestion: "${issue.suggestion}"`;
+                    
+                    suggestionElement.appendChild(typeElement);
+                    suggestionElement.appendChild(detailElement);
+                    suggestionElement.appendChild(correctedElement);
+                    
+                    grammarFeedback.appendChild(suggestionElement);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

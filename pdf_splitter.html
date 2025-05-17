@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Split PDF Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    input[type="file"], input[type="number"] {
+      margin: 10px 0;
+      padding: 8px;
+      width: calc(100% - 16px);
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    #error {
+      color: red;
+      margin-top: 10px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Split PDF Tool</h1>
+    <input type="file" id="pdfInput" accept="application/pdf">
+    <input type="number" id="startPage" placeholder="Start Page" min="1">
+    <input type="number" id="endPage" placeholder="End Page" min="1">
+    <button id="splitBtn" onclick="splitPDF()" disabled>Split PDF</button>
+    <p id="error"></p>
+  </div>
+
+  <script src="https://unpkg.com/pdf-lib@1.17.0/dist/pdf-lib.min.js"></script>
+  <script>
+    const pdfInput = document.getElementById('pdfInput');
+    const startPageInput = document.getElementById('startPage');
+    const endPageInput = document.getElementById('endPage');
+    const splitBtn = document.getElementById('splitBtn');
+    const errorMsg = document.getElementById('error');
+
+    pdfInput.addEventListener('change', () => {
+      splitBtn.disabled = !pdfInput.files.length;
+      errorMsg.style.display = 'none';
+    });
+
+    async function splitPDF() {
+      errorMsg.style.display = 'none';
+      splitBtn.disabled = true;
+
+      try {
+        const file = pdfInput.files[0];
+        if (!file) throw new Error('No PDF file selected.');
+
+        const startPage = parseInt(startPageInput.value);
+        const endPage = parseInt(endPageInput.value);
+
+        if (!startPage || !endPage || startPage < 1 || endPage < startPage) {
+          throw new Error('Invalid page range. Ensure start page is less than or equal to end page and both are positive.');
+        }
+
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+        const totalPages = pdfDoc.getPageCount();
+
+        if (startPage > totalPages || endPage > totalPages) {
+          throw new Error(`Page range exceeds PDF length (${totalPages} pages).`);
+        }
+
+        const newPdf = await PDFLib.PDFDocument.create();
+        const pages = await newPdf.copyPages(pdfDoc, Array.from(
+          { length: endPage - startPage + 1 },
+          (_, i) => startPage - 1 + i
+        ));
+        pages.forEach(page => newPdf.addPage(page));
+
+        const pdfBytes = await newPdf.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `split_${file.name}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        splitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

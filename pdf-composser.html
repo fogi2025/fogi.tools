@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF Composer - FOGI AI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+
+    .composer-container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="composer-container">
+    <h1>PDF Composer</h1>
+    <input type="text" id="pdfTitle" placeholder="Enter PDF Title" />
+    <textarea id="pdfContent" rows="10" placeholder="Enter PDF Content..."></textarea>
+    <button onclick="generatePDF()">Download PDF</button>
+  </div>
+
+  <script>
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const title = document.getElementById("pdfTitle").value.trim();
+      const content = document.getElementById("pdfContent").value.trim();
+
+      if (!title || !content) {
+        alert("Please fill in both title and content.");
+        return;
+      }
+
+      doc.setFontSize(18);
+      doc.text(title, 10, 20);
+
+      doc.setFontSize(12);
+      const lines = doc.splitTextToSize(content, 180);
+      doc.text(lines, 10, 30);
+
+      doc.save(`${title.replace(/\s+/g, "_")}.pdf`);
+    }
+  </script>
+</body>
+</html>

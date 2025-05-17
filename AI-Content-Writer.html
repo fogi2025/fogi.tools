@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Content Writer</title>
+  <style>
+    :root {
+      --primary-color: #4a6cf7;
+      --secondary-color: #6c757d;
+      --success-color: #198754;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --white: #ffffff;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f7ff;
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .logo {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    
+    .tagline {
+      font-size: 1.2rem;
+      color: var(--secondary-color);
+    }
+    
+    .app-wrapper {
+      display: flex;
+      gap: 2rem;
+      background-color: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .sidebar {
+      width: 300px;
+      background-color: #f0f4ff;
+      padding: 1.5rem;
+    }
+    
+    .content-area {
+      flex: 1;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background-color: var(--white);
+      font-size: 1rem;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    button {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: var(--white);
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      background-color: #3a5bd7;
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      background-color: var(--secondary-color);
+      cursor: not-allowed;
+    }
+    
+    .secondary-button {
+      background-color: var(--secondary-color);
+    }
+    
+    .secondary-button:hover {
+      background-color: #5a6268;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .output-area {
+      flex: 1;
+      background-color: #f9faff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      border: 1px solid #e1e7ff;
+      overflow-y: auto;
+      min-height: 300px;
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(74, 108, 247, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .templates {
+      margin-top: 2rem;
+    }
+    
+    .template-item {
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .template-item:hover {
+      border-color: var(--primary-color);
+      background-color: #f0f4ff;
+    }
+    
+    .template-item h3 {
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+    
+    .history-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .history-item:hover {
+      background-color: #f0f4ff;
+    }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    .status-message {
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 6px;
+    }
+    
+    .success {
+      background-color: #d1e7dd;
+      color: #0f5132;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+    
+    .tab-navigation {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tab {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    
+    .tab.active {
+      border-bottom: 2px solid var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .app-wrapper {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">AI Content Writer</div>
+      <p class="tagline">Generate high-quality content with AI assistance</p>
+    </header>
+    
+    <div class="app-wrapper">
+      <div class="sidebar">
+        <div class="form-group">
+          <label for="content-type">Content Type</label>
+          <select id="content-type">
+            <option value="blog-post">Blog Post</option>
+            <option value="social-media">Social Media Post</option>
+            <option value="email">Email</option>
+            <option value="product-description">Product Description</option>
+            <option value="ad-copy">Ad Copy</option>
+            <option value="seo-content">SEO Content</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="tone">Tone</label>
+          <select id="tone">
+            <option value="professional">Professional</option>
+            <option value="casual">Casual</option>
+            <option value="formal">Formal</option>
+            <option value="friendly">Friendly</option>
+            <option value="persuasive">Persuasive</option>
+            <option value="informative">Informative</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="length">Length</label>
+          <select id="length">
+            <option value="short">Short (~150 words)</option>
+            <option value="medium">Medium (~300 words)</option>
+            <option value="long">Long (~500 words)</option>
+            <option value="very-long">Very Long (~800 words)</option>
+          </select>
+        </div>
+        
+        <div class="templates">
+          <h3>Templates</h3>
+          <div class="template-item" data-template="blog-post">
+            <h3>Blog Post</h3>
+            <p>Generate a well-structured blog post with introduction, body paragraphs, and conclusion.</p>
+          </div>
+          <div class="template-item" data-template="social-media">
+            <h3>Social Media Post</h3>
+            <p>Create engaging content for social media platforms with hashtags and call-to-action.</p>
+          </div>
+          <div class="template-item" data-template="email-newsletter">
+            <h3>Email Newsletter</h3>
+            <p>Write a professional email newsletter with subject line and body content.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-area">
+        <div class="tab-navigation">
+          <div class="tab active" data-tab="create">Create Content</div>
+          <div class="tab" data-tab="history">History</div>
+        </div>
+        
+        <div class="tab-content" id="create-tab">
+          <div class="form-group">
+            <label for="topic">Topic or Keywords</label>
+            <input type="text" id="topic" placeholder="Enter your topic or keywords">
+          </div>
+          
+          <div class="form-group">
+            <label for="instructions">Additional Instructions</label>
+            <textarea id="instructions" placeholder="Add any specific instructions or details about what you want"></textarea>
+          </div>
+          
+          <div class="button-group">
+            <button id="generate-btn">Generate Content</button>
+            <button id="clear-btn" class="secondary-button">Clear</button>
+          </div>
+          
+          <div class="output-area" id="output">
+            <p>Your generated content will appear here...</p>
+          </div>
+          
+          <div class="button-group">
+            <button id="copy-btn" disabled>Copy to Clipboard</button>
+            <button id="save-btn" disabled>Save to History</button>
+          </div>
+        </div>
+        
+        <div class="tab-content" id="history-tab" style="display: none;">
+          <h3>Content History</h3>
+          <div id="history-list">
+            <p>Your saved content will appear here...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for content generation (simulating AI)
+    const contentTemplates = {
+      'blog-post': {
+        intro: [
+          "Have you ever wondered about {{topic}}? In this blog post, we'll explore the fascinating world of {{topic}} and discover why it matters.",
+          "{{topic}} has become increasingly important in today's world. Let's dive into what makes it significant and how it affects our daily lives."
+        ],
+        body: [
+          "First, let's consider the key aspects of {{topic}}. There are several important factors to consider when discussing this subject.",
+          "The history of {{topic}} is rich and complex. Over time, it has evolved in response to various cultural, economic, and technological changes.",
+          "Experts in the field of {{topic}} often highlight several critical components that contribute to its overall significance and impact.",
+          "When examining {{topic}} more closely, we can identify patterns and trends that help us understand its broader implications."
+        ],
+        conclusion: [
+          "In conclusion, {{topic}} represents an important area that deserves our attention and consideration. By understanding it better, we can make more informed decisions.",
+          "As we've seen, {{topic}} has numerous facets worth exploring. Moving forward, it will continue to shape our experiences in meaningful ways."
+        ]
+      },
+      'social-media': {
+        short: [
+          "✨ Excited to share my thoughts on {{topic}}! What's your take? #{{hashtag}} #trending",
+          "🔥 Just discovered amazing insights about {{topic}}! This changes everything! #{{hashtag}} #mindblown",
+          "📌 Must-read information about {{topic}} that you won't want to miss! #{{hashtag}} #importantinfo"
+        ],
+        medium: [
+          "Today I'm diving deep into {{topic}} and why it matters for all of us. The more I learn, the more I realize how significant this is for our future. Share your thoughts below! #{{hashtag}} #conversation",
+          "I've been researching {{topic}} for weeks now, and I'm amazed by what I've discovered. Here's a quick summary that might change your perspective too! #{{hashtag}} #learningsomething"
+        ]
+      },
+      'email': {
+        subject: [
+          "Important Update: {{topic}} You Need To Know",
+          "Discover the Latest on {{topic}}: Exclusive Insights",
+          "{{topic}}: Essential Information for Your Consideration"
+        ],
+        body: [
+          "Dear valued reader,\n\nI hope this email finds you well. I wanted to share some important information about {{topic}} that I believe will be of interest to you.\n\n{{content}}\n\nPlease don't hesitate to reach out if you have any questions.\n\nBest regards,\n[Your Name]",
+          "Hello there,\n\nI'm writing to provide you with an update on {{topic}}.\n\n{{content}}\n\nI look forward to your feedback.\n\nWarm regards,\n[Your Name]"
+        ]
+      }
+    };
+
+    // Utility functions
+    function getRandomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function generateHashtag(topic) {
+      return topic.toLowerCase().replace(/\s+/g, '');
+    }
+
+    function simulateAIProcessing(topic, contentType, tone, length, instructions) {
+      return new Promise((resolve) => {
+        // Simulate processing delay
+        setTimeout(() => {
+          let content = '';
+          const hashtag = generateHashtag(topic);
+          
+          // Generate content based on type
+          if (contentType === 'blog-post') {
+            let intro = getRandomItem(contentTemplates['blog-post'].intro).replace(/{{topic}}/g, topic);
+            let bodyParagraphs = '';
+            
+            // Generate body paragraphs based on length
+            const numParagraphs = length === 'short' ? 1 : (length === 'medium' ? 2 : (length === 'long' ? 3 : 4));
+            
+            for (let i = 0; i < numParagraphs; i++) {
+              bodyParagraphs += getRandomItem(contentTemplates['blog-post'].body).replace(/{{topic}}/g, topic) + '\n\n';
+            }
+            
+            const conclusion = getRandomItem(contentTemplates['blog-post'].conclusion).replace(/{{topic}}/g, topic);
+            
+            content = `# ${topic.toUpperCase()}: A ${tone.charAt(0).toUpperCase() + tone.slice(1)} Analysis\n\n${intro}\n\n${bodyParagraphs}${conclusion}`;
+            
+            // Add instructions-specific content if provided
+            if (instructions) {
+              content += `\n\n## Additional Notes\n${instructions}`;
+            }
+          } else if (contentType === 'social-media') {
+            if (length === 'short' || length === 'medium') {
+              content = getRandomItem(contentTemplates['social-media'][length]).replace(/{{topic}}/g, topic).replace(/{{hashtag}}/g, hashtag);
+            } else {
+              // For longer social media posts
+              const shortPost = getRandomItem(contentTemplates['social-media'].short).replace(/{{topic}}/g, topic).replace(/{{hashtag}}/g, hashtag);
+              const mediumPost = getRandomItem(contentTemplates['social-media'].medium).replace(/{{topic}}/g, topic).replace(/{{hashtag}}/g, hashtag);
+              content = `${mediumPost}\n\n${shortPost}\n\nWhat are your thoughts on ${topic}? Let me know in the comments below! #${hashtag} #discussion #trending`;
+            }
+          } else if (contentType === 'email') {
+            const subject = getRandomItem(contentTemplates['email'].subject).replace(/{{topic}}/g, topic);
+            
+            // Create email body content based on length
+            let emailContent = '';
+            if (length === 'short') {
+              emailContent = `I wanted to briefly inform you about ${topic}. It's becoming increasingly relevant in our field.`;
+            } else if (length === 'medium') {
+              emailContent = `I wanted to share some insights about ${topic}. Recent developments have shown its growing importance. Many experts believe it will continue to be relevant in the coming months.`;
+            } else {
+              emailContent = `I wanted to provide a comprehensive overview of ${topic}. Recent studies have highlighted its significance in various contexts. Experts in the field have been discussing its implications extensively. The consensus seems to be that we should pay close attention to how it evolves in the near future.`;
+            }
+            
+            content = `Subject: ${subject}\n\n${getRandomItem(contentTemplates['email'].body).replace(/{{topic}}/g, topic).replace(/{{content}}/g, emailContent)}`;
+          } else if (contentType === 'product-description') {
+            content = `# ${topic} - Product Description\n\nIntroducing our revolutionary ${topic}, designed to transform your experience. This innovative product combines cutting-edge technology with intuitive design to deliver exceptional performance.\n\n## Key Features:\n- Premium quality materials\n- Intuitive user interface\n- Long-lasting performance\n- Versatile applications\n\nWhether you're a professional or enthusiast, ${topic} is the perfect solution for your needs.`;
+          } else if (contentType === 'ad-copy') {
+            content = `**DISCOVER THE POWER OF ${topic.toUpperCase()}**\n\n🔥 Transform your experience with our revolutionary ${topic}!\n\n✅ Exclusive features you won't find anywhere else\n✅ Premium quality at competitive prices\n✅ Trusted by thousands of satisfied customers\n\n🔶 Limited time offer: Get 15% off today! 🔶\n\nDon't wait - Experience the difference now!`;
+          } else if (contentType === 'seo-content') {
+            content = `# ${topic}: The Ultimate Guide\n\nAre you looking for comprehensive information about ${topic}? You've come to the right place. In this complete guide, we'll cover everything you need to know about ${topic}, from basic concepts to advanced strategies.\n\n## Understanding ${topic}\n\n${topic} has become increasingly important in today's landscape. Many people search for reliable information about ${topic} to improve their knowledge and skills.\n\n## Why ${topic} Matters\n\nThere are several reasons why ${topic} has gained significance in recent years. First, it provides valuable solutions to common problems. Second, it helps optimize processes for better results.\n\n## How to Get Started with ${topic}\n\nBeginning your journey with ${topic} is easier than you might think. Start by researching the fundamentals and gradually build your expertise.\n\n## Advanced ${topic} Techniques\n\nOnce you've mastered the basics, you can explore advanced techniques to maximize the benefits of ${topic}.\n\n## Conclusion\n\n${topic} continues to evolve, offering new opportunities for those who stay informed. Keep learning and experimenting to make the most of what ${topic} has to offer.`;
+          }
+          
+          // Adjust tone
+          if (tone === 'professional') {
+            content = content.replace(/exciting|amazing|mind-blowing/gi, 'significant');
+          } else if (tone === 'casual') {
+            content = content.replace(/significant|comprehensive/gi, 'awesome');
+          } else if (tone === 'formal') {
+            content = content.replace(/amazing|awesome/gi, 'remarkable');
+          } else if (tone === 'friendly') {
+            content = content.replace(/significant|comprehensive/gi, 'fantastic');
+          }
+          
+          resolve(content);
+        }, 1500); // Simulate delay
+      });
+    }
+
+    // DOM Elements
+    const generateBtn = document.getElementById('generate-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const outputArea = document.getElementById('output');
+    const topicInput = document.getElementById('topic');
+    const instructionsInput = document.getElementById('instructions');
+    const contentTypeSelect = document.getElementById('content-type');
+    const toneSelect = document.getElementById('tone');
+    const lengthSelect = document.getElementById('length');
+    const templateItems = document.querySelectorAll('.template-item');
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const historyList = document.getElementById('history-list');
+
+    // Content history - using in-memory storage instead of localStorage
+    let contentHistory = [];
+    
+    // Function to safely use localStorage with fallback
+    function safeStorage() {
+      let memoryStorage = {};
+      
+      // Check if localStorage is available
+      let storageAvailable = false;
+      try {
+        const testKey = '__storage_test__';
+        window.localStorage.setItem(testKey, testKey);
+        window.localStorage.removeItem(testKey);
+        storageAvailable = true;
+      } catch (e) {
+        storageAvailable = false;
+      }
+      
+      return {
+        getItem: function(key) {
+          if (storageAvailable) {
+            return localStorage.getItem(key);
+          }
+          return memoryStorage[key] || null;
+        },
+        setItem: function(key, value) {
+          if (storageAvailable) {
+            localStorage.setItem(key, value);
+          } else {
+            memoryStorage[key] = value;
+          }
+        }
+      };
+    }
+    
+    const storage = safeStorage();
+    
+    // Try to load history from storage
+    try {
+      const savedHistory = storage.getItem('aiContentHistory');
+      if (savedHistory) {
+        contentHistory = JSON.parse(savedHistory);
+      }
+    } catch (e) {
+      console.log('Could not load history from storage:', e);
+    }
+
+    // Event listeners
+    generateBtn.addEventListener('click', async () => {
+      const topic = topicInput.value.trim();
+      
+      if (!topic) {
+        alert('Please enter a topic or keywords');
+        return;
+      }
+      
+      // Show loading indicator
+      outputArea.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      
+      // Disable generate button while processing
+      generateBtn.disabled = true;
+      
+      const contentType = contentTypeSelect.value;
+      const tone = toneSelect.value;
+      const length = lengthSelect.value;
+      const instructions = instructionsInput.value.trim();
+      
+      try {
+        // Simulate AI content generation
+        const generatedContent = await simulateAIProcessing(topic, contentType, tone, length, instructions);
+        
+        // Display generated content
+        outputArea.innerHTML = '<div class="status-message success">Content generated successfully!</div>';
+        outputArea.innerHTML += `<div>${generatedContent.replace(/\n/g, '<br>')}</div>`;
+        
+        // Enable copy and save buttons
+        copyBtn.disabled = false;
+        saveBtn.disabled = false;
+      } catch (error) {
+        outputArea.innerHTML = '<div class="status-message error">Error generating content. Please try again.</div>';
+      } finally {
+        // Re-enable generate button
+        generateBtn.disabled = false;
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      topicInput.value = '';
+      instructionsInput.value = '';
+      outputArea.innerHTML = '<p>Your generated content will appear here...</p>';
+      copyBtn.disabled = true;
+      saveBtn.disabled = true;
+    });
+
+    copyBtn.addEventListener('click', () => {
+      const contentText = outputArea.innerText;
+      navigator.clipboard.writeText(contentText)
+        .then(() => {
+          alert('Content copied to clipboard!');
+        })
+        .catch(err => {
+          alert('Failed to copy content: ' + err);
+        });
+    });
+
+    saveBtn.addEventListener('click', () => {
+      const contentText = outputArea.innerText;
+      const topic = topicInput.value.trim();
+      const contentType = contentTypeSelect.value;
+      
+      // Save to history
+      const historyItem = {
+        id: Date.now(),
+        topic,
+        contentType,
+        content: contentText,
+        date: new Date().toLocaleDateString()
+      };
+      
+      contentHistory.unshift(historyItem);
+      
+      // Limit history to 10 items
+      if (contentHistory.length > 10) {
+        contentHistory = contentHistory.slice(0, 10);
+      }
+      
+      // Save to local storage
+      try {
+        storage.setItem('aiContentHistory', JSON.stringify(contentHistory));
+      } catch (e) {
+        console.log('Could not save to storage:', e);
+      }
+      
+      // Update history tab
+      updateHistoryList();
+      
+      alert('Content saved to history!');
+    });
+
+    // Template selection
+    templateItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const template = item.getAttribute('data-template');
+        
+        // Set form values based on template
+        if (template === 'blog-post') {
+          contentTypeSelect.value = 'blog-post';
+          toneSelect.value = 'professional';
+          lengthSelect.value = 'medium';
+        } else if (template === 'social-media') {
+          contentTypeSelect.value = 'social-media';
+          toneSelect.value = 'casual';
+          lengthSelect.value = 'short';
+        } else if (template === 'email-newsletter') {
+          contentTypeSelect.value = 'email';
+          toneSelect.value = 'formal';
+          lengthSelect.value = 'medium';
+        }
+      });
+    });
+
+    // Tab navigation
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Hide all tab contents
+        tabContents.forEach(content => {
+          content.style.display = 'none';
+        });
+        
+        // Show selected tab content
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(`${tabId}-tab`).style.display = 'block';
+        
+        // Update history list if history tab is selected
+        if (tabId === 'history') {
+          updateHistoryList();
+        }
+      });
+    });
+
+    // Function to update history list
+    function updateHistoryList() {
+      if (contentHistory.length > 0) {
+        let historyHTML = '';
+        
+        contentHistory.forEach(item => {
+          historyHTML += `
+            <div class="history-item" data-id="${item.id}">
+              <h4>${item.topic}</h4>
+              <p>Type: ${item.contentType} | Date: ${item.date}</p>
+            </div>
+          `;
+        });
+        
+        historyList.innerHTML = historyHTML;
+        
+        // Add click event to history items
+        document.querySelectorAll('.history-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const id = parseInt(item.getAttribute('data-id'));
+            const historyItem = contentHistory.find(h => h.id === id);
+            
+            if (historyItem) {
+              // Switch to create tab
+              tabs[0].click();
+              
+              // Set form values
+              topicInput.value = historyItem.topic;
+              contentTypeSelect.value = historyItem.contentType;
+              
+              // Display content
+              outputArea.innerHTML = `<div>${historyItem.content.replace(/\n/g, '<br>')}</div>`;
+              
+              // Enable buttons
+              copyBtn.disabled = false;
+              saveBtn.disabled = false;
+            }
+          });
+        });
+      } else {
+        historyList.innerHTML = '<p>Your saved content will appear here...</p>';
+      }
+    }
+
+    // Initialize
+    updateHistoryList();
+  </script>
+</body>
+</html>

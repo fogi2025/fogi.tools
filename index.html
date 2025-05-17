@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOGI-AI | All-in-One Online Tools</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #10b981;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #9ca3af;
+            --gray-light: #f3f4f6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .logo-highlight {
+            color: var(--secondary);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--primary);
+        }
+        
+        .action-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .hero {
+            padding: 60px 0;
+            text-align: center;
+            background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: #4b5563;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+        
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        .tools-section {
+            padding: 60px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            color: var(--dark);
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .tool-category {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .tool-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .pdf-tools .category-header {
+            background-color: #ef4444;
+        }
+        
+        .image-tools .category-header {
+            background-color: #8b5cf6;
+        }
+        
+        .text-tools .category-header {
+            background-color: #10b981;
+        }
+        
+        .converter-tools .category-header {
+            background-color: #f59e0b;
+        }
+        
+        .ai-tools .category-header {
+            background-color: #3b82f6;
+        }
+        
+        .social-tools .category-header {
+            background-color: #ec4899;
+        }
+        
+        .tools-list {
+            padding: 20px;
+        }
+        
+        .tool-item {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--dark);
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            margin-bottom: 5px;
+        }
+        
+        .tool-item:hover {
+            background-color: var(--gray-light);
+        }
+        
+        .popular-section {
+            background-color: white;
+            padding: 60px 0;
+        }
+        
+        .popular-tools {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .popular-tool {
+            background-color: var(--light);
+            border-radius: 8px;
+            padding: 20px;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .popular-tool:hover {
+            transform: translateY(-5px);
+        }
+        
+        .tool-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            color: var(--primary);
+        }
+        
+        .testimonials {
+            padding: 60px 0;
+            background-color: var(--gray-light);
+        }
+        
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .testimonial-content {
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+        
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: var(--gray-light);
+        }
+        
+        .author-name {
+            font-weight: 600;
+        }
+        
+        .author-title {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .cta-section {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(135deg, #dbeafe, #ede9fe);
+        }
+        
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .cta-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta-content p {
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 50px 0 20px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: var(--gray);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        
+        .social-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tools-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+            
+            .popular-tool {
+                width: 150px;
+            }
+            
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="navbar">
+                <a href="#" class="logo">
+                    <span class="logo-text">FOGI-<span class="logo-highlight">AI</span></span>
+                </a>
+                <nav>
+                    <ul>
+                        <li><a href="#">All Tools</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">API</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </nav>
+                <button class="action-btn">Sign Up Free</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>All-in-One Online Tools</h1>
+            <p>FOGI-AI offers 100+ free online tools to help you solve everyday tasks faster. Convert, compress, modify files with ease - no software installation needed.</p>
+            <div class="search-container">
+                <input type="text" class="search-box" placeholder="Search for a tool...">
+                <span class="search-icon">🔍</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="tools-section">
+        <div class="container">
+            <h2 class="section-title">Our Tools Collection</h2>
+            <div class="tools-grid">
+                <div class="tool-category pdf-tools">
+                    <div class="category-header">
+                        <h3>PDF Tools</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="pdf-composser.html" class="tool-item">PDF Compressor</a>
+                        <a href="pdf-to-word-converter.html" class="tool-item">PDF to Word</a>
+                        <a href="pdf-jpj conveter.html" class="tool-item">PDF to JPG</a>
+                        <a href="merge-pdf.html" class="tool-item">Merge PDF</a>
+                        <a href="pdf_splitter.html" class="tool-item">Split PDF</a>
+                        <a href="pdf-excel.html" class="tool-item">PDF to Excel</a>
+                        <a href="pdf-ppt.html" class="tool-item">PDF to PPT</a>
+                    </div>
+                </div>
+                
+                <div class="tool-category image-tools">
+                    <div class="category-header">
+                        <h3>Image Tools</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="image-compressor.html" class="tool-item">Image Compressor</a>
+                        <a href="Image-Converter.html" class="tool-item">Image Converter</a>
+                        <a href="Remove-Background.html" class="tool-item">Remove Background</a>
+                        <a href="resize-image.html" class="tool-item">Resize Image</a>
+                        <a href="crop-image.html" class="tool-item">Crop Image</a>
+                        <a href="image-text.html" class="tool-item">Image to Text (OCR)</a>
+                        <a href="watermark-image.html" class="tool-item">Watermark Image</a>
+                    </div>
+                </div>
+                
+                <div class="tool-category text-tools">
+                    <div class="category-header">
+                        <h3>Text Tools</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="tts.html" class="tool-item">Text to Speech</a>
+                        <a href="grammar-checker.html" class="tool-item">Grammar Checker</a>
+                        <a href="word-counter.html" class="tool-item">Word Counter</a>
+                        <a href="case-converter.html" class="tool-item">Case Converter</a>
+                        <a href="lorem-ipsum.html" class="tool-item">Lorem Ipsum Generator</a>
+                        <a href="text-summarizer.html" class="tool-item">Text Summarizer</a>
+                        <a href="plagiarism-checker.html" class="tool-item">Plagiarism Checker</a>
+                    </div>
+                </div>
+                
+                <div class="tool-category converter-tools">
+                    <div class="category-header">
+                        <h3>Converters</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="Word-to-PDF.html" class="tool-item">Word to PDF</a>
+                        <a href="JPG-to-PDF.html" class="tool-item">JPG to PDF</a>
+                        <a href="MP4-to-MP3.html" class="tool-item">MP4 to MP3</a>
+                        <a href="MP4-to-MP3.html" class="tool-item">HTML to PDF</a>
+                        <a href="PPT-to-PDF.html" class="tool-item">PPT to PDF</a>
+                        <a href="webp-to-jpj.html" class="tool-item">WEBP to JPG</a>
+                        <a href="excel-to-pdf.html" class="tool-item">Excel to PDF</a>
+                    </div>
+                </div>
+                
+                <div class="tool-category ai-tools">
+                    <div class="category-header">
+                        <h3>AI Tools</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="AI-Content-Writer.html" class="tool-item">AI Content Writer</a>
+                        <a href="#" class="tool-item">AI Image Generator</a>
+                        <a href="#" class="tool-item">AI Code Assistant</a>
+                        <a href="#" class="tool-item">ChatGPT Alternative</a>
+                        <a href="#" class="tool-item">AI Paraphraser</a>
+                        <a href="#" class="tool-item">AI Summarizer</a>
+                        <a href="#" class="tool-item">AI Text to Image</a>
+                    </div>
+                </div>
+                
+                <div class="tool-category social-tools">
+                    <div class="category-header">
+                        <h3>Social Media</h3>
+                    </div>
+                    <div class="tools-list">
+                        <a href="#" class="tool-item">Instagram Photo Downloader</a>
+                        <a href="#" class="tool-item">YouTube Video Downloader</a>
+                        <a href="#" class="tool-item">TikTok Video Downloader</a>
+                        <a href="#" class="tool-item">Twitter Video Downloader</a>
+                        <a href="#" class="tool-item">Facebook Video Downloader</a>
+                        <a href="S-M-R.html" class="tool-item">Social Media Image Resizer</a>
+                        <a href="Hashtag-Generator.html" class="tool-item">Hashtag Generator</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="popular-section">
+        <div class="container">
+            <h2 class="section-title">Most Popular Tools</h2>
+            <div class="popular-tools">
+                <div class="popular-tool">
+                    <span class="tool-icon">📄</span>
+                    <h4>PDF Compressor</h4>
+                </div>
+                <div class="popular-tool">
+                    <span class="tool-icon">🖼️</span>
+                    <h4>Image Compressor</h4>
+                </div>
+                <div class="popular-tool">
+                    <span class="tool-icon">🔄</span>
+                    <h4>PDF to Word</h4>
+                </div>
+                <div class="popular-tool">
+                    <span class="tool-icon">✂️</span>
+                    <h4>Remove Background</h4>
+                </div>
+                <div class="popular-tool">
+                    <span class="tool-icon">📝</span>
+                    <h4>AI Writer</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">What Our Users Say</h2>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-content">"FOGI-AI has become my go-to tool for all my file conversion needs. So easy to use and saves me tons of time!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div>
+                            <p class="author-name">Sarah Johnson</p>
+                            <p class="author-title">Digital Marketer</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-content">"The PDF tools are fantastic! I can quickly compress files for email attachments without losing quality."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div>
+                            <p class="author-name">Michael Chen</p>
+                            <p class="author-title">Product Manager</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-content">"As a student, FOGI-AI has been a lifesaver for managing all my documents and assignments. And it's free!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar"></div>
+                        <div>
+                            <p class="author-name">Emma Rodriguez</p>
+                            <p class="author-title">University Student</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Boost Your Productivity?</h2>
+                <p>Join over 1 million users who trust FOGI-AI for their daily tasks. Sign up for free and get access to all tools!</p>
+                <button class="action-btn">Get Started for Free</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>FOGI-AI</h3>
+                    <p style="color: var(--gray); margin-bottom: 20px;">Your all-in-one toolkit for everyday digital tasks. Simple, fast, and free online tools.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">f</a>
+                        <a href="#" class="social-icon">t</a>
+                        <a href="#" class="social-icon">in</a>
+                        <a href="#" class="social-icon">ig</a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Tools</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">PDF Tools</a></li>
+                        <li><a href="#">Image Tools</a></li>
+                        <li><a href="#">Text Tools</a></li>
+                        <li><a href="#">Converters</a></li>
+                        <li><a href="#">AI Tools</a></li>
+                        <li><a href="#">Social Media</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Press</a></li>
+                        <li><a href="#">Partners</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 FOGI Entertainment. All rights reserved. Contact: fogi.entertainment@gmail.com</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add simple search functionality
+        document.querySelector('.search-box').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const toolItems = document.querySelectorAll('.tool-item');
+            
+            toolItems.forEach(item => {
+                const toolName = item.textContent.toLowerCase();
+                if (toolName.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Add simple scroll animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const toolCategories = document.querySelectorAll('.tool-category');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            toolCategories.forEach(category => {
+                category.style.opacity = 0;
+                category.style.transform = 'translateY(20px)';
+                category.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(category);
+            });
+        });
+    </script>
+</body>
+</html>

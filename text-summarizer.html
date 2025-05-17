@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Summarizer Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .text-area {
+            position: relative;
+        }
+        
+        textarea, .output {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: none;
+            border: 1px solid #ddd;
+        }
+        
+        .output {
+            background-color: #f8f9fa;
+            overflow-y: auto;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .settings {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        select, input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .word-count {
+            color: #7f8c8d;
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: #555;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            top: -30px;
+            right: 0;
+            font-size: 14px;
+        }
+        
+        .copy-btn:hover .tooltip {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Text Summarizer Tool</h1>
+            <p class="description">Paste your text below and get a concise summary instantly</p>
+        </header>
+        
+        <div class="main">
+            <div class="text-area">
+                <textarea id="inputText" placeholder="Paste your text here..."></textarea>
+                <div class="word-count" id="inputCount">0 words</div>
+            </div>
+            
+            <div class="text-area">
+                <div class="output" id="outputText">Your summary will appear here...</div>
+                <div class="word-count" id="outputCount">0 words</div>
+                <button class="copy-btn" id="copyBtn">
+                    Copy
+                    <span class="tooltip">Copy to clipboard</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="settings">
+                <select id="summaryLength">
+                    <option value="short">Short summary</option>
+                    <option value="medium" selected>Medium summary</option>
+                    <option value="long">Long summary</option>
+                </select>
+                
+                <label for="percentageLength">Summary length (%):
+                    <input type="number" id="percentageLength" min="5" max="50" value="30">
+                </label>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn" id="summarizeBtn">Summarize</button>
+                <button class="btn" id="clearBtn">Clear</button>
+                <div class="loader" id="loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const inputText = document.getElementById('inputText');
+            const outputText = document.getElementById('outputText');
+            const summarizeBtn = document.getElementById('summarizeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const inputCount = document.getElementById('inputCount');
+            const outputCount = document.getElementById('outputCount');
+            const summaryLength = document.getElementById('summaryLength');
+            const percentageLength = document.getElementById('percentageLength');
+            const loader = document.getElementById('loader');
+            
+            // Event listeners
+            inputText.addEventListener('input', updateWordCount);
+            summarizeBtn.addEventListener('click', summarizeText);
+            clearBtn.addEventListener('click', clearText);
+            copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Update word count on input
+            function updateWordCount() {
+                const text = inputText.value.trim();
+                const wordCount = text ? text.split(/\s+/).length : 0;
+                inputCount.textContent = `${wordCount} words`;
+                
+                // Disable summarize button if no text
+                summarizeBtn.disabled = wordCount === 0;
+            }
+            
+            // Summarize text function
+            function summarizeText() {
+                const text = inputText.value.trim();
+                if (!text) return;
+                
+                // Show loader
+                loader.style.display = 'inline-block';
+                summarizeBtn.disabled = true;
+                
+                // Simulate processing delay
+                setTimeout(() => {
+                    const summary = generateSummary(text);
+                    outputText.textContent = summary;
+                    
+                    // Update summary word count
+                    const summaryWordCount = summary.split(/\s+/).length;
+                    outputCount.textContent = `${summaryWordCount} words`;
+                    
+                    // Hide loader
+                    loader.style.display = 'none';
+                    summarizeBtn.disabled = false;
+                }, 1000);
+            }
+            
+            // Clear text function
+            function clearText() {
+                inputText.value = '';
+                outputText.textContent = 'Your summary will appear here...';
+                inputCount.textContent = '0 words';
+                outputCount.textContent = '0 words';
+                summarizeBtn.disabled = true;
+            }
+            
+            // Copy to clipboard function
+            function copyToClipboard() {
+                const textToCopy = outputText.textContent;
+                if (textToCopy === 'Your summary will appear here...') return;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const tooltip = copyBtn.querySelector('.tooltip');
+                    tooltip.textContent = 'Copied!';
+                    
+                    setTimeout(() => {
+                        tooltip.textContent = 'Copy to clipboard';
+                    }, 2000);
+                });
+            }
+            
+            // Generate summary function
+            function generateSummary(text) {
+                // Split text into sentences
+                const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+                if (sentences.length === 0) return text;
+                
+                // Calculate target length based on settings
+                let targetPercentage = parseInt(percentageLength.value) / 100;
+                
+                // Adjust percentage based on summary length dropdown
+                switch (summaryLength.value) {
+                    case 'short':
+                        targetPercentage *= 0.5;
+                        break;
+                    case 'long':
+                        targetPercentage *= 1.5;
+                        break;
+                }
+                
+                // Ensure percentage is within bounds
+                targetPercentage = Math.max(0.05, Math.min(0.8, targetPercentage));
+                
+                // Calculate target number of sentences
+                const targetSentences = Math.max(1, Math.ceil(sentences.length * targetPercentage));
+                
+                // Score sentences
+                const sentenceScores = sentences.map((sentence, index) => {
+                    // Basic scoring heuristics
+                    let score = 0;
+                    
+                    // Position score - first and last sentences often contain important information
+                    if (index < sentences.length * 0.2) score += 3;
+                    if (index > sentences.length * 0.8) score += 1;
+                    
+                    // Length score - favor medium-length sentences
+                    const words = sentence.split(/\s+/).length;
+                    if (words > 5 && words < 25) score += 2;
+                    
+                    // Keyword score - check for important indicator phrases
+                    const keyPhrases = ['important', 'significant', 'conclusion', 'result', 'therefore', 'thus', 'in summary', 'to summarize'];
+                    keyPhrases.forEach(phrase => {
+                        if (sentence.toLowerCase().includes(phrase)) score += 2;
+                    });
+                    
+                    return { sentence, score, index };
+                });
+                
+                // Sort sentences by score
+                sentenceScores.sort((a, b) => b.score - a.score);
+                
+                // Take top sentences
+                const topSentences = sentenceScores.slice(0, targetSentences);
+                
+                // Sort sentences back to original order
+                topSentences.sort((a, b) => a.index - b.index);
+                
+                // Join sentences into summary
+                const summary = topSentences.map(item => item.sentence.trim()).join(' ');
+                
+                return summary;
+            }
+            
+            // Initialize
+            updateWordCount();
+        });
+    </script>
+</body>
+</html>

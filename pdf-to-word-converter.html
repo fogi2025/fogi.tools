@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Word Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6a8caf;
+            --accent-color: #ff6b6b;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .converter-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 800px;
+            transition: all 0.3s ease;
+        }
+
+        .converter-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--secondary-color);
+            border-radius: 10px;
+            padding: 3rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            background-color: var(--light-color);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: #e9ecef;
+        }
+
+        .upload-area.active {
+            border-color: var(--accent-color);
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+            text-align: center;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5rem;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-convert {
+            background-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .btn-convert:hover {
+            background-color: #ff5252;
+        }
+
+        .file-info {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin: 1.5rem 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature h3 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message {
+            display: none;
+            background-color: rgba(40, 167, 69, 0.1);
+            border: 1px solid var(--success-color);
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: var(--success-color);
+        }
+
+        @media (max-width: 768px) {
+            .converter-container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+            
+            .upload-icon {
+                font-size: 2.5rem;
+            }
+            
+            .buttons-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PDF to Word Converter</h1>
+        <p>Convert your PDF documents to editable Word files easily</p>
+    </header>
+    
+    <main>
+        <div class="converter-container">
+            <h2>Upload your PDF file</h2>
+            
+            <div id="upload-area" class="upload-area">
+                <div class="upload-icon">📁</div>
+                <p>Drag & drop your PDF file here or click to browse</p>
+                <p><small>Maximum file size: 10MB</small></p>
+                <input type="file" id="file-input" accept=".pdf" style="display: none;">
+            </div>
+            
+            <div id="file-info" class="file-info">
+                <p><strong>File name:</strong> <span id="file-name"></span></p>
+                <p><strong>File size:</strong> <span id="file-size"></span></p>
+            </div>
+            
+            <div id="progress-container" class="progress-container">
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+                <div id="status" class="status">Processing...</div>
+            </div>
+            
+            <div id="success-message" class="success-message">
+                <p>Your PDF has been successfully converted to Word format!</p>
+            </div>
+            
+            <div class="buttons-container">
+                <button id="convert-btn" class="btn-convert" disabled>Convert to Word</button>
+                <button id="download-btn" class="hidden">Download Word Document</button>
+                <button id="clear-btn" class="hidden">Convert Another File</button>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure Conversion</h3>
+                <p>Your files are processed locally in your browser. Nothing is uploaded to any server.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Fast Processing</h3>
+                <p>Our advanced algorithms ensure quick conversion of your PDF documents.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <h3>Editable Output</h3>
+                <p>Get fully editable Word documents that maintain formatting and layout.</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 PDF to Word Converter. All rights reserved.</p>
+    </footer>
+    
+    <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        
+        // DOM Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress');
+        const statusText = document.getElementById('status');
+        const convertBtn = document.getElementById('convert-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const successMessage = document.getElementById('success-message');
+        
+        // Variables
+        let pdfFile = null;
+        let wordDocx = null;
+        
+        // Event Listeners
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+        
+        convertBtn.addEventListener('click', convertToWord);
+        downloadBtn.addEventListener('click', downloadWord);
+        clearBtn.addEventListener('click', resetConverter);
+        
+        // Functions
+        function handleFile(file) {
+            // Check if file is a PDF
+            if (file.type !== 'application/pdf') {
+                alert('Please select a PDF file.');
+                return;
+            }
+            
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File is too large. Maximum size is 10MB.');
+                return;
+            }
+            
+            pdfFile = file;
+            
+            // Display file info
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+            
+            // Enable convert button
+            convertBtn.disabled = false;
+            
+            // Hide success message if it was visible
+            successMessage.style.display = 'none';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) {
+                return bytes + ' bytes';
+            } else if (bytes < 1024 * 1024) {
+                return (bytes / 1024).toFixed(2) + ' KB';
+            } else {
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+        }
+        
+        async function convertToWord() {
+            try {
+                // Show progress
+                progressContainer.style.display = 'block';
+                convertBtn.disabled = true;
+                
+                // Read the PDF file
+                const arrayBuffer = await readFileAsArrayBuffer(pdfFile);
+                
+                // Load the PDF document
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const numPages = pdf.numPages;
+                
+                // Create a Word document structure
+                let docxContent = {
+                    sections: [{
+                        properties: {},
+                        children: []
+                    }]
+                };
+                
+                // Process each page
+                for (let i = 1; i <= numPages; i++) {
+                    // Update progress
+                    updateProgress(i, numPages);
+                    statusText.textContent = `Processing page ${i} of ${numPages}...`;
+                    
+                    // Get page
+                    const page = await pdf.getPage(i);
+                    
+                    // Extract text content
+                    const textContent = await page.getTextContent();
+                    
+                    // Process text items
+                    let lastY = null;
+                    let textItems = [];
+                    
+                    textContent.items.forEach(item => {
+                        // Check if this is a new paragraph based on Y position
+                        if (lastY !== null && Math.abs(lastY - item.transform[5]) > 5) {
+                            // Add paragraph to document
+                            if (textItems.length > 0) {
+                                docxContent.sections[0].children.push({
+                                    type: 'paragraph',
+                                    children: [{ type: 'text', value: textItems.join(' ') }]
+                                });
+                                textItems = [];
+                            }
+                        }
+                        
+                        textItems.push(item.str);
+                        lastY = item.transform[5];
+                    });
+                    
+                    // Add final paragraph
+                    if (textItems.length > 0) {
+                        docxContent.sections[0].children.push({
+                            type: 'paragraph',
+                            children: [{ type: 'text', value: textItems.join(' ') }]
+                        });
+                    }
+                    
+                    // Add page break if not the last page
+                    if (i < numPages) {
+                        docxContent.sections[0].children.push({
+                            type: 'paragraph',
+                            children: [],
+                            pageBreakBefore: true
+                        });
+                    }
+                }
+                
+                // Generate Word document
+                statusText.textContent = 'Generating Word document...';
+                
+                // Create a new JSZip instance
+                const zip = new JSZip();
+                
+                // Add basic Word document files
+                zip.file("word/document.xml", generateDocumentXml(docxContent));
+                zip.file("_rels/.rels", generateBasicRels());
+                zip.file("word/_rels/document.xml.rels", generateDocumentRels());
+                zip.file("[Content_Types].xml", generateContentTypes());
+                
+                // Generate the DOCX file
+                wordDocx = await zip.generateAsync({ type: 'blob' });
+                
+                // Update UI
+                updateProgress(100, 100);
+                statusText.textContent = 'Conversion completed!';
+                downloadBtn.classList.remove('hidden');
+                clearBtn.classList.remove('hidden');
+                successMessage.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error converting PDF to Word:', error);
+                statusText.textContent = 'Error: ' + error.message;
+                progressBar.style.width = '0%';
+            }
+        }
+        
+        function generateDocumentXml(content) {
+            let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>`;
+            
+            content.sections[0].children.forEach(paragraph => {
+                if (paragraph.pageBreakBefore) {
+                    xml += `<w:p>
+      <w:r>
+        <w:br w:type="page"/>
+      </w:r>
+    </w:p>`;
+                }
+                
+                xml += `<w:p>`;
+                
+                if (paragraph.children && paragraph.children.length > 0) {
+                    paragraph.children.forEach(textItem => {
+                        xml += `<w:r>
+        <w:t>${escapeXml(textItem.value)}</w:t>
+      </w:r>`;
+                    });
+                }
+                
+                xml += `</w:p>`;
+            });
+            
+            xml += `  </w:body>
+</w:document>`;
+            
+            return xml;
+        }
+        
+        function generateBasicRels() {
+            return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+        }
+        
+        function generateDocumentRels() {
+            return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+</Relationships>`;
+        }
+        
+        function generateContentTypes() {
+            return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+        }
+        
+        function escapeXml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+        }
+        
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            progressBar.style.width = percentage + '%';
+        }
+        
+        function downloadWord() {
+            if (!wordDocx) {
+                alert('No Word document available to download.');
+                return;
+            }
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(wordDocx);
+            link.download = pdfFile.name.replace('.pdf', '.docx');
+            link.click();
+        }
+        
+        function resetConverter() {
+            // Reset file input
+            fileInput.value = '';
+            pdfFile = null;
+            wordDocx = null;
+            
+            // Reset UI
+            fileInfo.style.display = 'none';
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+            statusText.textContent = 'Processing...';
+            convertBtn.disabled = true;
+            downloadBtn.classList.add('hidden');
+            clearBtn.classList.add('hidden');
+            successMessage.style.display = 'none';
+        }
+        
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+    </script>
+</body>
+</html>

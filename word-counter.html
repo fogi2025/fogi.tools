@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Counter Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f8fa;
+            color: #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-box {
+            background-color: #f0f7ff;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3498db;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #clearButton {
+            background-color: #e74c3c;
+        }
+        
+        #clearButton:hover {
+            background-color: #c0392b;
+        }
+        
+        #copyButton {
+            background-color: #2ecc71;
+        }
+        
+        #copyButton:hover {
+            background-color: #27ae60;
+        }
+        
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Word Counter Tool</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-title">WORDS</div>
+                <div class="stat-value" id="wordCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">CHARACTERS (NO SPACES)</div>
+                <div class="stat-value" id="charCountNoSpaces">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">CHARACTERS (WITH SPACES)</div>
+                <div class="stat-value" id="charCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">SENTENCES</div>
+                <div class="stat-value" id="sentenceCount">0</div>
+            </div>
+        </div>
+        
+        <textarea id="textInput" placeholder="Type or paste your text here..."></textarea>
+        
+        <div class="controls">
+            <button id="copyButton">Copy Text</button>
+            <button id="clearButton">Clear Text</button>
+        </div>
+        
+        <div class="footer">
+            <p>Type or paste your text in the box above to count words, characters, and sentences in real-time.</p>
+        </div>
+    </div>
+    
+    <script>
+        const textInput = document.getElementById('textInput');
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        const charCountNoSpaces = document.getElementById('charCountNoSpaces');
+        const sentenceCount = document.getElementById('sentenceCount');
+        const copyButton = document.getElementById('copyButton');
+        const clearButton = document.getElementById('clearButton');
+        
+        // Count function that runs on each input
+        function countElements() {
+            const text = textInput.value;
+            
+            // Count words (handles different types of spaces and line breaks)
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            
+            // Count characters with spaces
+            const chars = text.length;
+            
+            // Count characters without spaces
+            const charsNoSpaces = text.replace(/\s+/g, '').length;
+            
+            // Count sentences (looking for periods, question marks, exclamation points)
+            const sentences = text.trim() === '' ? 0 : 
+                             text.split(/[.!?]+/).filter(sentence => sentence.trim() !== '').length;
+            
+            // Update the counts
+            wordCount.textContent = words;
+            charCount.textContent = chars;
+            charCountNoSpaces.textContent = charsNoSpaces;
+            sentenceCount.textContent = sentences;
+        }
+        
+        // Setup event listeners
+        textInput.addEventListener('input', countElements);
+        
+        copyButton.addEventListener('click', () => {
+            textInput.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const originalText = copyButton.textContent;
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = originalText;
+            }, 1500);
+        });
+        
+        clearButton.addEventListener('click', () => {
+            textInput.value = '';
+            countElements();
+        });
+        
+        // Initial count in case there's default text
+        countElements();
+    </script>
+</body>
+</html>

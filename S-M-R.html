@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Image Resizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        .dimension-inputs {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .image-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .image-box img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        #downloadLink {
+            display: none;
+            margin-top: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        #downloadLink:hover {
+            text-decoration: underline;
+        }
+
+        .custom-dimensions {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Social Media Image Resizer</h1>
+        
+        <div class="input-group">
+            <label for="imageUpload">Upload Image:</label>
+            <input type="file" id="imageUpload" accept="image/*">
+        </div>
+
+        <div class="input-group">
+            <label for="platformSelect">Select Platform:</label>
+            <select id="platformSelect">
+                <option value="custom">Custom</option>
+                <option value="instagram-post">Instagram Post (1080x1080)</option>
+                <option value="instagram-story">Instagram Story (1080x1920)</option>
+                <option value="facebook-post">Facebook Post (1200x630)</option>
+                <option value="twitter-post">Twitter Post (1200x675)</option>
+                <option value="linkedin-post">LinkedIn Post (1200x627)</option>
+            </select>
+        </div>
+
+        <div class="custom-dimensions">
+            <label>
+                <input type="checkbox" id="customSizeCheckbox"> Enable Custom Dimensions
+            </label>
+            <div class="dimension-inputs">
+                <input type="number" id="widthInput" placeholder="Width" disabled>
+                <input type="number" id="heightInput" placeholder="Height" disabled>
+            </div>
+        </div>
+
+        <button onclick="resizeImage()">Resize Image</button>
+
+        <div class="preview">
+            <div class="image-container">
+                <div class="image-box">
+                    <h3>Original Image</h3>
+                    <img id="originalPreview" src="#" alt="Original Preview">
+                </div>
+                <div class="image-box">
+                    <h3>Resized Image</h3>
+                    <img id="resizedPreview" src="#" alt="Resized Preview">
+                </div>
+            </div>
+            <a id="downloadLink" download="resized-image.png">Download Resized Image</a>
+        </div>
+    </div>
+
+    <script>
+        const platformDimensions = {
+            'instagram-post': { width: 1080, height: 1080 },
+            'instagram-story': { width: 1080, height: 1920 },
+            'facebook-post': { width: 1200, height: 630 },
+            'twitter-post': { width: 1200, height: 675 },
+            'linkedin-post': { width: 1200, height: 627 },
+            'custom': { width: null, height: null }
+        };
+
+        let originalImage = null;
+
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                originalImage = new Image();
+                originalImage.src = event.target.result;
+                originalImage.onload = function() {
+                    document.getElementById('originalPreview').src = event.target.result;
+                };
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        document.getElementById('platformSelect').addEventListener('change', function() {
+            const selectedPlatform = this.value;
+            if (selectedPlatform !== 'custom') {
+                document.getElementById('customSizeCheckbox').checked = false;
+                toggleDimensionInputs(false);
+            }
+        });
+
+        document.getElementById('customSizeCheckbox').addEventListener('change', function() {
+            toggleDimensionInputs(this.checked);
+            if (this.checked) {
+                document.getElementById('platformSelect').value = 'custom';
+            }
+        });
+
+        function toggleDimensionInputs(enabled) {
+            document.getElementById('widthInput').disabled = !enabled;
+            document.getElementById('heightInput').disabled = !enabled;
+        }
+
+        function resizeImage() {
+            if (!originalImage) {
+                alert('Please upload an image first!');
+                return;
+            }
+
+            let width, height;
+            const platform = document.getElementById('platformSelect').value;
+            
+            if (document.getElementById('customSizeCheckbox').checked) {
+                width = parseInt(document.getElementById('widthInput').value);
+                height = parseInt(document.getElementById('heightInput').value);
+            } else {
+                const dimensions = platformDimensions[platform];
+                width = dimensions.width;
+                height = dimensions.height;
+            }
+
+            if (!width || !height || width <= 0 || height <= 0) {
+                alert('Please enter valid dimensions!');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(originalImage, 0, 0, width, height);
+
+            const resizedDataUrl = canvas.toDataURL('image/png');
+            document.getElementById('resizedPreview').src = resizedDataUrl;
+            document.getElementById('downloadLink').href = resizedDataUrl;
+            document.getElementById('downloadLink').style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html>

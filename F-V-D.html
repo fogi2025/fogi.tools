@@ -1,0 +1,51 @@
+<?php
+header('Content-Type: application/json');
+error_reporting(E_ERROR | E_PARSE);
+
+if (!isset($_POST['url'])) {
+    echo json_encode(['error' => 'URL not provided']);
+    exit();
+}
+
+$url = $_POST['url'];
+
+// Simple video URL extraction
+// This is a basic example and might need to be updated as Facebook changes their URL structure
+if (preg_match('/\/(v\/|video\/|watch\/)(\d+)/', $url, $matches)) {
+    $videoId = $matches[2];
+    $directUrl = "https://video.facebook.com/v/$videoId";
+    echo json_encode(['videoUrl' => $directUrl]);
+    exit();
+}
+
+// Fallback method
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HEADER, false);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+$response = curl_exec($ch);
+$curlError = curl_error($ch);
+$curlInfo = curl_getinfo($ch);
+
+curl_close($ch);
+
+if ($curlError) {
+    echo json_encode(['error' => 'Failed to fetch video URL: ' . $curlError]);
+    exit();
+}
+
+// Look for video source in the page content
+if (preg_match('/"video_id":"(\d+)"/', $response, $matches)) {
+    $videoId = $matches[1];
+    $directUrl = "https://video.facebook.com/v/$videoId";
+    echo json_encode(['videoUrl' => $directUrl]);
+    exit();
+}
+
+// If no video ID found
+echo json_encode(['error' => 'Could not extract video URL']);
+exit();
+?>

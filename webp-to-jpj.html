@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEBP to JPG Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4a6fa5;
+        }
+        
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-container.dragover {
+            background-color: #e9f7fe;
+            border-color: #4a6fa5;
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: #4a6fa5;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .browse-button {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .browse-button:hover {
+            background-color: #3a5a8a;
+        }
+        
+        .preview-container {
+            display: none;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .preview-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .preview-box {
+            width: 48%;
+            text-align: center;
+        }
+        
+        .preview-box img {
+            max-width: 100%;
+            max-height: 300px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .preview-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .preview-info {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .download-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .download-button:hover {
+            background-color: #45a049;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .quality-control {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .quality-control label {
+            margin-right: 10px;
+        }
+        
+        .quality-control input {
+            width: 150px;
+        }
+        
+        .quality-value {
+            margin-left: 10px;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6fa5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: #d9534f;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .preview-section {
+                flex-direction: column;
+            }
+            
+            .preview-box {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WEBP to JPG Converter</h1>
+        
+        <div class="upload-container" id="dropArea">
+            <div class="upload-icon">📁</div>
+            <p>Drag & drop your WEBP image here</p>
+            <p>or</p>
+            <input type="file" id="fileInput" class="file-input" accept=".webp">
+            <button class="browse-button" id="browseButton">Browse Files</button>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Converting image...</p>
+        </div>
+        
+        <div class="preview-container" id="previewContainer">
+            <div class="preview-section">
+                <div class="preview-box">
+                    <div class="preview-title">Original (WEBP)</div>
+                    <div class="preview-info" id="originalInfo"></div>
+                    <img id="originalImage" alt="Original image">
+                </div>
+                
+                <div class="preview-box">
+                    <div class="preview-title">Converted (JPG)</div>
+                    <div class="preview-info" id="convertedInfo"></div>
+                    <img id="convertedImage" alt="Converted image">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div>
+                    <div class="quality-control">
+                        <label for="qualitySlider">JPG Quality:</label>
+                        <input type="range" id="qualitySlider" min="0" max="100" value="90">
+                        <span class="quality-value" id="qualityValue">90%</span>
+                    </div>
+                    <button class="browse-button" id="newImageButton">Convert New Image</button>
+                </div>
+                <button class="download-button" id="downloadButton">Download JPG</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+            const browseButton = document.getElementById('browseButton');
+            const previewContainer = document.getElementById('previewContainer');
+            const originalImage = document.getElementById('originalImage');
+            const convertedImage = document.getElementById('convertedImage');
+            const originalInfo = document.getElementById('originalInfo');
+            const convertedInfo = document.getElementById('convertedInfo');
+            const downloadButton = document.getElementById('downloadButton');
+            const newImageButton = document.getElementById('newImageButton');
+            const qualitySlider = document.getElementById('qualitySlider');
+            const qualityValue = document.getElementById('qualityValue');
+            const loadingElement = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Variables
+            let originalFile = null;
+            let currentQuality = 90;
+            
+            // Event listeners
+            browseButton.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    processFile(file);
+                }
+            });
+            
+            // Drag and Drop events
+            ['dragover', 'dragenter'].forEach(eventName => {
+                dropArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropArea.classList.add('dragover');
+                });
+            });
+            
+            ['dragleave', 'dragend'].forEach(eventName => {
+                dropArea.addEventListener(eventName, () => {
+                    dropArea.classList.remove('dragover');
+                });
+            });
+            
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    processFile(file);
+                }
+            });
+            
+            // New image button
+            newImageButton.addEventListener('click', () => {
+                previewContainer.style.display = 'none';
+                dropArea.style.display = 'flex';
+                errorMessage.style.display = 'none';
+                fileInput.value = '';
+            });
+            
+            // Quality slider
+            qualitySlider.addEventListener('input', () => {
+                currentQuality = qualitySlider.value;
+                qualityValue.textContent = `${currentQuality}%`;
+                
+                if (originalFile) {
+                    convertWebpToJpg(originalFile, currentQuality / 100);
+                }
+            });
+            
+            // Download button
+            downloadButton.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = getFileNameWithoutExtension(originalFile.name) + '.jpg';
+                link.href = convertedImage.src;
+                link.click();
+            });
+            
+            // Process the uploaded file
+            function processFile(file) {
+                // Check if file is a WEBP image
+                if (!file.type.includes('webp')) {
+                    showError('Please upload a WEBP image file.');
+                    return;
+                }
+                
+                originalFile = file;
+                
+                // Show loading
+                loadingElement.style.display = 'block';
+                errorMessage.style.display = 'none';
+                
+                // Display original image
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    originalImage.src = e.target.result;
+                    originalInfo.textContent = `Size: ${formatFileSize(file.size)}`;
+                };
+                reader.readAsDataURL(file);
+                
+                // Convert image
+                convertWebpToJpg(file, currentQuality / 100);
+            }
+            
+            // Convert WEBP to JPG
+            function convertWebpToJpg(file, quality) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#FFFFFF'; // Set white background
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                        
+                        try {
+                            // Convert to JPG
+                            const jpgDataUrl = canvas.toDataURL('image/jpeg', quality);
+                            
+                            // Show converted image
+                            convertedImage.src = jpgDataUrl;
+                            
+                            // Get file size
+                            getFileSize(jpgDataUrl).then(size => {
+                                convertedInfo.textContent = `Size: ${formatFileSize(size)}`;
+                                
+                                // Hide loading and show preview
+                                loadingElement.style.display = 'none';
+                                dropArea.style.display = 'none';
+                                previewContainer.style.display = 'block';
+                            });
+                        } catch (error) {
+                            showError('Error converting image. Please try again with a different file.');
+                            loadingElement.style.display = 'none';
+                        }
+                    };
+                    
+                    img.onerror = function() {
+                        showError('Error loading image. Please try again with a different file.');
+                        loadingElement.style.display = 'none';
+                    };
+                    
+                    img.src = e.target.result;
+                };
+                
+                reader.onerror = function() {
+                    showError('Error reading file. Please try again.');
+                    loadingElement.style.display = 'none';
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            // Helper functions
+            function getFileSize(dataUrl) {
+                return new Promise(resolve => {
+                    // Convert base64 to raw binary data held in a string
+                    const byteString = atob(dataUrl.split(',')[1]);
+                    
+                    // Calculate size
+                    const size = byteString.length;
+                    resolve(size);
+                });
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes < 1024) {
+                    return bytes + ' bytes';
+                } else if (bytes < 1048576) {
+                    return (bytes / 1024).toFixed(2) + ' KB';
+                } else {
+                    return (bytes / 1048576).toFixed(2) + ' MB';
+                }
+            }
+            
+            function getFileNameWithoutExtension(filename) {
+                return filename.replace(/\.[^/.]+$/, "");
+            }
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

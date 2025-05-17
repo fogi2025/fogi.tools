@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF to PPT Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDF to PPT Converter</h1>
+    <input type="file" id="pdfInput" accept=".pdf">
+    <div id="status"></div>
+
+    <script>
+        document.getElementById('pdfInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file || !file.type.match('application/pdf')) {
+                document.getElementById('status').textContent = 'Please upload a valid PDF file.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function() {
+                const arrayBuffer = reader.result;
+                pdfjsLib.getDocument(arrayBuffer).promise.then(function(pdf) {
+                    convertPdfToPpt(pdf);
+                }).catch(function(error) {
+                    document.getElementById('status').textContent = 'Error loading PDF: ' + error.message;
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        async function convertPdfToPpt(pdf) {
+            const numPages = pdf.numPages;
+            const pptx = new PptxGenJS();
+
+            for (let i = 1; i <= numPages; i++) {
+                document.getElementById('status').textContent = `Processing page ${i} of ${numPages}`;
+                
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 }); // Adjust scale for better resolution
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const context = canvas.getContext('2d');
+
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                const imageData = canvas.toDataURL('image/png');
+                const slide = pptx.addSlide();
+                slide.addImage({ data: imageData, x: 0, y: 0, w: 10, h: 7.5 }); // Standard slide size in inches
+            }
+
+            document.getElementById('status').textContent = 'Conversion complete, downloading...';
+            pptx.writeFile({ fileName: 'output.pptx' })
+                .then(() => {
+                    document.getElementById('status').textContent = 'Download complete!';
+                })
+                .catch((error) => {
+                    document.getElementById('status').textContent = 'Error generating PPTX: ' + error.message;
+                });
+        }
+    </script>
+</body>
+</html>

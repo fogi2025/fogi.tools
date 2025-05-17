@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Converter Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #preview, #converted-preview {
+            max-width: 100%;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .result-column {
+            width: 48%;
+        }
+        #download-link {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Converter Tool</h1>
+        
+        <div class="input-group">
+            <label for="image-upload">Upload Image</label>
+            <input type="file" id="image-upload" accept="image/*">
+        </div>
+
+        <div class="input-group">
+            <label for="output-format">Output Format</label>
+            <select id="output-format">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="resize-width">Resize Width (optional)</label>
+            <input type="number" id="resize-width" placeholder="Enter width in pixels">
+        </div>
+
+        <div class="input-group">
+            <label for="resize-height">Resize Height (optional)</label>
+            <input type="number" id="resize-height" placeholder="Enter height in pixels">
+        </div>
+
+        <div class="input-group">
+            <label for="quality">Image Quality (0-1)</label>
+            <input type="number" id="quality" min="0" max="1" step="0.1" value="0.8" placeholder="Enter quality (0-1)">
+        </div>
+
+        <button id="convert-btn">Convert Image</button>
+
+        <div class="result-section">
+            <div class="result-column">
+                <h3>Original Image</h3>
+                <img id="preview" alt="Original image preview">
+            </div>
+            <div class="result-column">
+                <h3>Converted Image</h3>
+                <img id="converted-preview" alt="Converted image preview">
+            </div>
+        </div>
+
+        <a id="download-link" href="#" download>Download Converted Image</a>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('image-upload');
+        const outputFormat = document.getElementById('output-format');
+        const resizeWidth = document.getElementById('resize-width');
+        const resizeHeight = document.getElementById('resize-height');
+        const qualityInput = document.getElementById('quality');
+        const convertBtn = document.getElementById('convert-btn');
+        const preview = document.getElementById('preview');
+        const convertedPreview = document.getElementById('converted-preview');
+        const downloadLink = document.getElementById('download-link');
+
+        imageUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    preview.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        convertBtn.addEventListener('click', function() {
+            const file = imageUpload.files[0];
+            if (!file) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // Create canvas for conversion and resizing
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Determine width and height
+                    const width = resizeWidth.value ? parseInt(resizeWidth.value) : img.width;
+                    const height = resizeHeight.value ? parseInt(resizeHeight.value) : img.height;
+
+                    // Set canvas dimensions
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    // Draw image on canvas (resize if needed)
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Get quality value
+                    const quality = parseFloat(qualityInput.value);
+
+                    // Convert to selected format
+                    const mimeType = `image/${outputFormat.value}`;
+                    const convertedDataUrl = canvas.toDataURL(mimeType, quality);
+
+                    // Update preview and download link
+                    convertedPreview.src = convertedDataUrl;
+                    downloadLink.href = convertedDataUrl;
+                    downloadLink.download = `converted_image.${outputFormat.value}`;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>

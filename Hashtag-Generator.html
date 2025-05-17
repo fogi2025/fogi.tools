@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hashtag Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #1557b0;
+        }
+
+        .result-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .hashtags {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .copy-btn {
+            background-color: #34a853;
+            width: auto;
+            margin-top: 10px;
+        }
+
+        .copy-btn:hover {
+            background-color: #2a7d3e;
+        }
+
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hashtag Generator</h1>
+        <div class="input-group">
+            <input type="text" id="input-text" placeholder="Enter your text here...">
+        </div>
+        <button onclick="generateHashtags()">Generate Hashtags</button>
+        <div class="result-container">
+            <div id="hashtags" class="hashtags"></div>
+        </div>
+        <button class="copy-btn" onclick="copyHashtags()">Copy Hashtags</button>
+        <div id="error-message" class="error"></div>
+    </div>
+
+    <script>
+        function generateHashtags() {
+            const inputText = document.getElementById('input-text').value.trim();
+            const hashtagsElement = document.getElementById('hashtags');
+            const errorElement = document.getElementById('error-message');
+
+            // Clear previous results and errors
+            hashtagsElement.textContent = '';
+            errorElement.textContent = '';
+
+            if (!inputText) {
+                errorElement.textContent = 'Please enter some text first!';
+                return;
+            }
+
+            // Process the input text
+            const words = inputText.split(/\s+/).filter(word => word.length > 0);
+            const processedWords = words.map(word => {
+                // Remove special characters except letters, numbers, and underscores
+                const cleanedWord = word.replace(/[^\w]/g, '').toLowerCase();
+                return `#${cleanedWord}`;
+            });
+
+            // Limit to 10 hashtags maximum
+            const uniqueHashtags = [...new Set(processedWords)].slice(0, 10);
+            
+            if (uniqueHashtags.length === 0) {
+                errorElement.textContent = 'No valid hashtags could be generated from the input!';
+                return;
+            }
+
+            hashtagsElement.textContent = uniqueHashtags.join(' ');
+        }
+
+        function copyHashtags() {
+            const hashtagsElement = document.getElementById('hashtags');
+            const text = hashtagsElement.textContent;
+
+            if (!text) {
+                document.getElementById('error-message').textContent = 'No hashtags to copy!';
+                return;
+            }
+
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const copyBtn = document.querySelector('.copy-btn');
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy Hashtags';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+        }
+    </script>
+</body>
+</html>

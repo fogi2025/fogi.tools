@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PDF to JPG Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background: #f4f4f4;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    canvas {
+      display: none;
+    }
+    #output img {
+      max-width: 100%;
+      margin-top: 20px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF to JPG Converter</h1>
+  <input type="file" id="pdfInput" accept="application/pdf"/>
+  <button onclick="convertPDFtoJPG()">Convert</button>
+  <canvas id="pdfCanvas"></canvas>
+  <div id="output"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <script>
+    async function convertPDFtoJPG() {
+      const fileInput = document.getElementById("pdfInput");
+      const canvas = document.getElementById("pdfCanvas");
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+
+      if (!fileInput.files[0]) {
+        alert("Please select a PDF file.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileReader = new FileReader();
+
+      fileReader.onload = async function () {
+        const typedarray = new Uint8Array(this.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+
+        const page = await pdf.getPage(1);
+        const viewport = page.getViewport({ scale: 2 });
+        const context = canvas.getContext("2d");
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        };
+
+        await page.render(renderContext).promise;
+
+        const image = new Image();
+        image.src = canvas.toDataURL("image/jpeg", 1.0);
+        image.alt = "PDF Page as JPG";
+        output.appendChild(image);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = image.src;
+        downloadLink.download = "converted.jpg";
+        downloadLink.textContent = "Download JPG";
+        downloadLink.style.display = "block";
+        downloadLink.style.marginTop = "10px";
+        output.appendChild(downloadLink);
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    }
+  </script>
+</body>
+</html>

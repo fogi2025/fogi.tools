@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plagiarism Checker Tool</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4caf50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --light-color: #f5f5f5;
+            --dark-color: #333;
+            --gray-color: #e0e0e0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subheader {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .input-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+        
+        h2 {
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: var(--gray-color);
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+            height: 8px;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease-in-out;
+        }
+        
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .score-card {
+            flex: 1;
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .score-title {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .low { color: var(--accent-color); }
+        .medium { color: var(--warning-color); }
+        .high { color: var(--danger-color); }
+        
+        .highlighted-text {
+            margin-top: 30px;
+            line-height: 1.8;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .highlight {
+            background-color: rgba(255, 152, 0, 0.2);
+            padding: 2px 0;
+            border-bottom: 2px solid var(--warning-color);
+        }
+        
+        .high-match {
+            background-color: rgba(244, 67, 54, 0.2);
+            padding: 2px 0;
+            border-bottom: 2px solid var(--danger-color);
+        }
+        
+        .sources-list {
+            margin-top: 30px;
+        }
+        
+        .source-item {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .source-url {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .match-percentage {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        
+        .tips {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: rgba(74, 111, 165, 0.05);
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .tips h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .tips ul {
+            margin-left: 20px;
+        }
+        
+        .tips li {
+            margin-bottom: 8px;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(74, 111, 165, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .check-button-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            margin-top: 8px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .score-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .options {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Plagiarism Checker Tool</h1>
+            <p class="subheader">Check your content for originality and detect potential plagiarism</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <section class="input-section">
+                <h2>Check Your Text</h2>
+                <div class="form-group">
+                    <label for="content-input">Paste your text below:</label>
+                    <textarea id="content-input" placeholder="Enter or paste your text here to check for plagiarism (minimum 50 characters)"></textarea>
+                    <p class="error-message" id="error-message">Please enter at least 50 characters to check for plagiarism.</p>
+                </div>
+                
+                <div class="options">
+                    <div class="option-item">
+                        <input type="checkbox" id="check-grammar" checked>
+                        <label for="check-grammar">Check grammar</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="check-citations" checked>
+                        <label for="check-citations">Verify citations</label>
+                    </div>
+                    <div class="option-item">
+                        <input type="checkbox" id="deep-scan">
+                        <label for="deep-scan">Deep scan (slower)</label>
+                    </div>
+                </div>
+                
+                <div class="check-button-container">
+                    <button id="check-button" disabled>Check Plagiarism</button>
+                    <div class="loading-spinner" id="loading-spinner"></div>
+                </div>
+                
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </section>
+            
+            <section class="result-section" id="result-section">
+                <h2>Results</h2>
+                
+                <div class="score-container">
+                    <div class="score-card">
+                        <div class="score-title">Plagiarism Score</div>
+                        <div class="score-value" id="plagiarism-score">0%</div>
+                    </div>
+                    <div class="score-card">
+                        <div class="score-title">Originality</div>
+                        <div class="score-value" id="originality-score">100%</div>
+                    </div>
+                    <div class="score-card">
+                        <div class="score-title">Matching Sources</div>
+                        <div class="score-value" id="sources-count">0</div>
+                    </div>
+                </div>
+                
+                <h3>Highlighted Content</h3>
+                <div class="highlighted-text" id="highlighted-text"></div>
+                
+                <div class="sources-list" id="sources-list">
+                    <h3>Matching Sources</h3>
+                    <p id="no-sources" style="display: none;">No matching sources found.</p>
+                    <!-- Sources will be added here dynamically -->
+                </div>
+                
+                <div class="tips">
+                    <h3>Tips to Avoid Plagiarism</h3>
+                    <ul>
+                        <li>Always cite your sources properly using an appropriate citation style (APA, MLA, Chicago, etc.)</li>
+                        <li>Use quotation marks for direct quotes and provide proper attribution</li>
+                        <li>Paraphrase content in your own words while still citing the original source</li>
+                        <li>Take detailed notes during research to keep track of all your sources</li>
+                        <li>Use multiple sources to develop a broader understanding of the topic</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+    
+    <script>
+        // Sample database of texts for simulating plagiarism detection
+        const sampleTexts = [
+            {
+                id: 1,
+                text: "The effects of climate change are becoming increasingly evident worldwide. Rising temperatures, extreme weather events, and melting ice caps are just a few indicators of this global phenomenon.",
+                source: "https://www.climateresearch.org/effects-of-climate-change"
+            },
+            {
+                id: 2,
+                text: "Artificial intelligence is transforming industries across the globe. From healthcare to finance, AI applications are streamlining processes and enabling new capabilities.",
+                source: "https://www.techjournal.com/ai-transformation"
+            },
+            {
+                id: 3,
+                text: "The human brain is perhaps the most complex structure in the known universe. With billions of neurons forming trillions of connections, it processes vast amounts of information every second.",
+                source: "https://www.neurosciencetoday.com/human-brain-complexity"
+            },
+            {
+                id: 4,
+                text: "Sustainable development aims to meet the needs of the present without compromising the ability of future generations to meet their own needs. It requires balancing economic growth, social inclusion, and environmental protection.",
+                source: "https://www.sustainabilityforum.org/principles"
+            },
+            {
+                id: 5,
+                text: "The Renaissance was a period of European cultural, artistic, political, and scientific rebirth following the Middle Ages. It began in Italy in the 14th century and lasted until the 17th century.",
+                source: "https://www.historyarchive.edu/renaissance-period"
+            },
+            {
+                id: 6,
+                text: "Quantum computing leverages the principles of quantum mechanics to process information in ways that classical computers cannot. It has the potential to revolutionize fields such as cryptography and drug discovery.",
+                source: "https://www.quantumresearch.edu/fundamentals"
+            },
+            {
+                id: 7,
+                text: "Photosynthesis is the process by which green plants and certain other organisms transform light energy into chemical energy. It occurs in the chloroplasts and involves the conversion of carbon dioxide and water into glucose and oxygen.",
+                source: "https://www.biologyscience.org/photosynthesis"
+            },
+            {
+                id: 8,
+                text: "The Industrial Revolution marked a major turning point in history. Almost every aspect of daily life was influenced in some way, with manufacturing transitioning from hand production methods to machines and new chemical processes.",
+                source: "https://www.historicalstudies.com/industrial-revolution"
+            },
+            {
+                id: 9,
+                text: "Blockchain technology provides a decentralized and transparent way to record transactions across many computers. This makes it difficult or impossible to change, hack, or cheat the system.",
+                source: "https://www.techblockchain.org/fundamentals"
+            },
+            {
+                id: 10,
+                text: "DNA, or deoxyribonucleic acid, is the hereditary material in humans and almost all other organisms. Nearly every cell in a person's body has the same DNA, which contains the genetic instructions for development and functioning.",
+                source: "https://www.geneticscience.edu/dna-basics"
+            }
+        ];
+
+        // DOM elements
+        const contentInput = document.getElementById('content-input');
+        const checkButton = document.getElementById('check-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const resultSection = document.getElementById('result-section');
+        const highlightedText = document.getElementById('highlighted-text');
+        const plagiarismScore = document.getElementById('plagiarism-score');
+        const originalityScore = document.getElementById('originality-score');
+        const sourcesCount = document.getElementById('sources-count');
+        const sourcesList = document.getElementById('sources-list');
+        const noSources = document.getElementById('no-sources');
+        const errorMessage = document.getElementById('error-message');
+        const deepScan = document.getElementById('deep-scan');
+
+        // Enable/disable check button based on input length
+        contentInput.addEventListener('input', () => {
+            if (contentInput.value.length >= 50) {
+                checkButton.disabled = false;
+                errorMessage.style.display = 'none';
+            } else {
+                checkButton.disabled = true;
+                if (contentInput.value.length > 0) {
+                    errorMessage.style.display = 'block';
+                } else {
+                    errorMessage.style.display = 'none';
+                }
+            }
+        });
+
+        // Main function to check plagiarism
+        checkButton.addEventListener('click', () => {
+            const text = contentInput.value.trim();
+            
+            if (text.length < 50) {
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading indicators
+            loadingSpinner.style.display = 'block';
+            progressContainer.style.display = 'block';
+            checkButton.disabled = true;
+            
+            // Reset previous results
+            highlightedText.innerHTML = '';
+            sourcesList.querySelectorAll('.source-item').forEach(item => item.remove());
+            noSources.style.display = 'none';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    setTimeout(showResults, 500);
+                }
+            }, deepScan.checked ? 50 : 30);
+        });
+
+        // Function to simulate plagiarism detection and display results
+        function showResults() {
+            const text = contentInput.value.trim();
+            const matches = findPlagiarismMatches(text);
+            
+            // Hide loading indicators
+            loadingSpinner.style.display = 'none';
+            progressContainer.style.display = 'none';
+            
+            // Show results section
+            resultSection.style.display = 'block';
+            
+            // Display highlighted text
+            displayHighlightedText(text, matches);
+            
+            // Calculate and display scores
+            const plagiarismPercentage = calculatePlagiarismScore(text, matches);
+            plagiarismScore.textContent = `${plagiarismPercentage}%`;
+            plagiarismScore.className = 'score-value ' + getPlagiarismScoreClass(plagiarismPercentage);
+            
+            const originalityPercentage = 100 - plagiarismPercentage;
+            originalityScore.textContent = `${originalityPercentage}%`;
+            originalityScore.className = 'score-value ' + getOriginalityScoreClass(originalityPercentage);
+            
+            sourcesCount.textContent = matches.length;
+            
+            // Display sources
+            displaySources(matches);
+            
+            // Re-enable check button
+            checkButton.disabled = false;
+            
+            // Scroll to results
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Function to find plagiarism matches
+        function findPlagiarismMatches(text) {
+            const textLower = text.toLowerCase();
+            const matches = [];
+            
+            // Check for exact matches and partial matches
+            sampleTexts.forEach(sample => {
+                const sampleLower = sample.text.toLowerCase();
+                
+                // Check for exact match
+                if (textLower.includes(sampleLower)) {
+                    const startIndex = textLower.indexOf(sampleLower);
+                    matches.push({
+                        source: sample.source,
+                        text: sample.text,
+                        startIndex: startIndex,
+                        endIndex: startIndex + sample.text.length,
+                        matchPercentage: Math.round((sample.text.length / text.length) * 100),
+                        isHighMatch: true
+                    });
+                    return;
+                }
+                
+                // Check for substantial partial matches (phrases of 5+ words)
+                const sampleWords = sampleLower.split(' ');
+                for (let i = 0; i < sampleWords.length - 4; i++) {
+                    const phrase = sampleWords.slice(i, i + 5).join(' ');
+                    if (textLower.includes(phrase)) {
+                        const startIndex = textLower.indexOf(phrase);
+                        const matchText = text.substring(startIndex, startIndex + phrase.length);
+                        matches.push({
+                            source: sample.source,
+                            text: matchText,
+                            startIndex: startIndex,
+                            endIndex: startIndex + phrase.length,
+                            matchPercentage: Math.round((phrase.length / text.length) * 100),
+                            isHighMatch: false
+                        });
+                    }
+                }
+            });
+            
+            // Add some random matches for demonstration if deep scan is checked
+            if (document.getElementById('deep-scan').checked && Math.random() > 0.5) {
+                addRandomMatches(text, matches);
+            }
+            
+            return matches;
+        }
+
+        // Function to add some random matches for demonstration purposes
+        function addRandomMatches(text, matches) {
+            const words = text.split(' ');
+            
+            if (words.length > 20) {
+                // Add 1-2 random matches
+                const numRandomMatches = Math.floor(Math.random() * 2) + 1;
+                
+                for (let i = 0; i < numRandomMatches; i++) {
+                    const startWordIndex = Math.floor(Math.random() * (words.length - 10));
+                    const phraseLength = Math.floor(Math.random() * 5) + 3;
+                    const phraseWords = words.slice(startWordIndex, startWordIndex + phraseLength);
+                    const phrase = phraseWords.join(' ');
+                    
+                    // Calculate the actual character indices
+                    let startCharIndex = 0;
+                    for (let j = 0; j < startWordIndex; j++) {
+                        startCharIndex += words[j].length + 1; // +1 for the space
+                    }
+                    
+                    const randomSourceIndex = Math.floor(Math.random() * sampleTexts.length);
+                    
+                    matches.push({
+                        source: sampleTexts[randomSourceIndex].source,
+                        text: phrase,
+                        startIndex: startCharIndex,
+                        endIndex: startCharIndex + phrase.length,
+                        matchPercentage: Math.round((phrase.length / text.length) * 100),
+                        isHighMatch: false
+                    });
+                }
+            }
+        }
+
+        // Function to display highlighted text
+        function displayHighlightedText(text, matches) {
+            if (matches.length === 0) {
+                highlightedText.textContent = text;
+                return;
+            }
+            
+            // Sort matches by start index
+            matches.sort((a, b) => a.startIndex - b.startIndex);
+            
+            let result = '';
+            let lastIndex = 0;
+            
+            matches.forEach(match => {
+                // Add text before the match
+                result += text.substring(lastIndex, match.startIndex);
+                
+                // Add the highlighted match
+                const matchClass = match.isHighMatch ? 'high-match' : 'highlight';
+                result += `<span class="${matchClass}">${text.substring(match.startIndex, match.endIndex)}</span>`;
+                
+                lastIndex = match.endIndex;
+            });
+            
+            // Add remaining text
+            result += text.substring(lastIndex);
+            
+            highlightedText.innerHTML = result;
+        }
+
+        // Function to calculate plagiarism score
+        function calculatePlagiarismScore(text, matches) {
+            if (matches.length === 0) return 0;
+            
+            // Calculate total characters matched
+            let totalMatched = 0;
+            matches.forEach(match => {
+                totalMatched += (match.endIndex - match.startIndex);
+            });
+            
+            // Calculate percentage
+            const percentage = Math.min(Math.round((totalMatched / text.length) * 100), 100);
+            
+            // Add some randomness for demonstration
+            const randomFactor = Math.floor(Math.random() * 5);
+            return Math.min(percentage + randomFactor, 100);
+        }
+
+        // Function to display sources
+        function displaySources(matches) {
+            if (matches.length === 0) {
+                noSources.style.display = 'block';
+                return;
+            }
+            
+            // Group matches by source
+            const sourceMap = {};
+            matches.forEach(match => {
+                if (!sourceMap[match.source]) {
+                    sourceMap[match.source] = {
+                        text: match.text,
+                        matchPercentage: match.matchPercentage
+                    };
+                } else if (match.matchPercentage > sourceMap[match.source].matchPercentage) {
+                    sourceMap[match.source].matchPercentage = match.matchPercentage;
+                    sourceMap[match.source].text = match.text;
+                }
+            });
+            
+            // Display each source
+            Object.keys(sourceMap).forEach(source => {
+                const sourceData = sourceMap[source];
+                
+                const sourceItem = document.createElement('div');
+                sourceItem.className = 'source-item';
+                
+                const sourceUrl = document.createElement('div');
+                sourceUrl.className = 'source-url';
+                sourceUrl.textContent = source;
+                
+                const matchText = document.createElement('div');
+                matchText.textContent = `Matched text: "${sourceData.text}"`;
+                
+                const matchPercentage = document.createElement('div');
+                matchPercentage.className = 'match-percentage';
+                matchPercentage.textContent = `${sourceData.matchPercentage}% match`;
+                
+                // Set color based on match percentage
+                if (sourceData.matchPercentage < 10) {
+                    matchPercentage.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                    matchPercentage.style.color = '#4caf50';
+                } else if (sourceData.matchPercentage < 30) {
+                    matchPercentage.style.backgroundColor = 'rgba(255, 152, 0, 0.1)';
+                    matchPercentage.style.color = '#ff9800';
+                } else {
+                    matchPercentage.style.backgroundColor = 'rgba(244, 67, 54, 0.1)';
+                    matchPercentage.style.color = '#f44336';
+                }
+                
+                sourceItem.appendChild(sourceUrl);
+                sourceItem.appendChild(matchText);
+                sourceItem.appendChild(matchPercentage);
+                
+                sourcesList.appendChild(sourceItem);
+            });
+        }
+
+        // Helper functions for styling scores
+        function getPlagiarismScoreClass(score) {
+            if (score < 10) return 'low';
+            if (score < 30) return 'medium';
+            return 'high';
+        }
+
+        function getOriginalityScoreClass(score) {
+            if (score > 90) return 'low';
+            if (score > 70) return 'medium';
+            return 'high';
+        }
+    </script>
+</body>
+</html>

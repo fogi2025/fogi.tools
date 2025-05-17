@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Cropper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin: 20px;
+            border: 2px dashed #666;
+            overflow: hidden;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+
+        .crop-box {
+            position: absolute;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            cursor: move;
+        }
+
+        .handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border: 1px solid #333;
+        }
+
+        .handle-tl { left: -5px; top: -5px; cursor: nwse-resize; }
+        .handle-tr { right: -5px; top: -5px; cursor: nesw-resize; }
+        .handle-bl { left: -5px; bottom: -5px; cursor: nesw-resize; }
+        .handle-br { right: -5px; bottom: -5px; cursor: nwse-resize; }
+
+        .controls {
+            margin: 20px;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="image-input" accept="image/*">
+    <div class="container">
+        <img id="image-preview">
+        <div class="crop-box" id="crop-box">
+            <div class="handle handle-tl"></div>
+            <div class="handle handle-tr"></div>
+            <div class="handle handle-bl"></div>
+            <div class="handle handle-br"></div>
+        </div>
+    </div>
+    <div class="controls">
+        <button onclick="cropImage()">Crop Image</button>
+        <button onclick="downloadImage()">Download</button>
+    </div>
+
+    <script>
+        const container = document.querySelector('.container');
+        const imagePreview = document.getElementById('image-preview');
+        const cropBox = document.getElementById('crop-box');
+        const imageInput = document.getElementById('image-input');
+        
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY;
+        let cropX = 0, cropY = 0, cropWidth = 100, cropHeight = 100;
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    imagePreview.src = event.target.result;
+                    imagePreview.style.display = 'block';
+                    initCropBox();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function initCropBox() {
+            // Set initial crop box size and position
+            cropBox.style.width = '100px';
+            cropBox.style.height = '100px';
+            cropBox.style.left = '0px';
+            cropBox.style.top = '0px';
+            
+            // Add event listeners for dragging and resizing
+            cropBox.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', stopDrag);
+            
+            // Add event listeners for resize handles
+            document.querySelectorAll('.handle').forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+            });
+        }
+
+        function startDrag(e) {
+            if (e.target.classList.contains('handle')) return;
+            isDragging = true;
+            startX = e.clientX - cropX;
+            startY = e.clientY - cropY;
+        }
+
+        function startResize(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = cropBox.getBoundingClientRect();
+            cropWidth = rect.width;
+            cropHeight = rect.height;
+        }
+
+        function handleMove(e) {
+            if (isDragging) {
+                cropX = e.clientX - startX;
+                cropY = e.clientY - startY;
+                cropBox.style.left = `${cropX}px`;
+                cropBox.style.top = `${cropY}px`;
+            }
+            
+            if (isResizing) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                cropBox.style.width = `${cropWidth + dx}px`;
+                cropBox.style.height = `${cropHeight + dy}px`;
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            isResizing = false;
+        }
+
+        function cropImage() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                const scale = Math.min(
+                    imagePreview.width / img.width,
+                    imagePreview.height / img.height
+                );
+                
+                const rect = cropBox.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                const x = (rect.left - containerRect.left) / scale;
+                const y = (rect.top - containerRect.top) / scale;
+                const width = rect.width / scale;
+                const height = rect.height / scale;
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, x, y, width, height, 0, 0, width, height);
+                imagePreview.src = canvas.toDataURL();
+            };
+            
+            img.src = imagePreview.src;
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'cropped-image.png';
+            link.href = imagePreview.src;
+            link.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Watermark Image Tool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+    <h1 class="text-2xl font-bold mb-4 text-center">Watermark Image Tool</h1>
+    
+    <!-- Image Upload -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Upload Image</label>
+      <input type="file" id="imageInput" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+    </div>
+    
+    <!-- Watermark Text -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Watermark Text</label>
+      <input type="text" id="watermarkText" value="Watermark" class="mt-1 block w-full p-2 border rounded text-sm">
+    </div>
+    
+    <!-- Watermark Customization -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <!-- Position -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Position</label>
+        <select id="position" class="mt-1 block w-full p-2 border rounded text-sm">
+          <option value="center">Center</option>
+          <option value="top-left">Top-Left</option>
+          <option value="top-right">Top-Right</option>
+          <option value="bottom-left">Bottom-Left</option>
+          <option value="bottom-right">Bottom-Right</option>
+        </select>
+      </div>
+      <!-- Font Size -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Font Size (px)</label>
+        <input type="number" id="fontSize" value="40" min="10" max="100" class="mt-1 block w-full p-2 border rounded text-sm">
+      </div>
+      <!-- Color -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Text Color</label>
+        <input type="color" id="textColor" value="#ffffff" class="mt-1 block w-full h-10 border rounded">
+      </div>
+      <!-- Opacity -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Opacity (0-1)</label>
+        <input type="number" id="opacity" value="0.5" min="0" max="1" step="0.1" class="mt-1 block w-full p-2 border rounded text-sm">
+      </div>
+    </div>
+    
+    <!-- Canvas for Preview -->
+    <canvas id="canvas" class="w-full border rounded mb-4"></canvas>
+    
+    <!-- Download Button -->
+    <button id="downloadBtn" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400" disabled>Download Watermarked Image</button>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const watermarkText = document.getElementById('watermarkText');
+    const position = document.getElementById('position');
+    const fontSize = document.getElementById('fontSize');
+    const textColor = document.getElementById('textColor');
+    const opacity = document.getElementById('opacity');
+    const canvas = document.getElementById('canvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const ctx = canvas.getContext('2d');
+    let img = new Image();
+
+    function updateWatermark() {
+      if (!img.src) return;
+
+      // Set canvas size to image size
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+
+      // Set watermark properties
+      ctx.font = `${fontSize.value}px Arial`;
+      ctx.fillStyle = textColor.value;
+      ctx.globalAlpha = opacity.value;
+
+      // Calculate text position
+      const text = watermarkText.value || 'Watermark';
+      const textMetrics = ctx.measureText(text);
+      let x, y;
+      switch (position.value) {
+        case 'top-left':
+          x = 20;
+          y = 20 + parseInt(fontSize.value);
+          break;
+        case 'top-right':
+          x = canvas.width - textMetrics.width - 20;
+          y = 20 + parseInt(fontSize.value);
+          break;
+        case 'bottom-left':
+          x = 20;
+          y = canvas.height - 20;
+          break;
+        case 'bottom-right':
+          x = canvas.width - textMetrics.width - 20;
+          y = canvas.height - 20;
+          break;
+        case 'center':
+        default:
+          x = (canvas.width - textMetrics.width) / 2;
+          y = canvas.height / 2;
+          break;
+      }
+
+      // Draw watermark
+      ctx.fillText(text, x, y);
+      ctx.globalAlpha = 1.0;
+
+      // Enable download button
+      downloadBtn.disabled = false;
+    }
+
+    // Handle image upload
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          img.src = event.target.result;
+          img.onload = updateWatermark;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Update watermark on input changes
+    watermarkText.addEventListener('input', updateWatermark);
+    position.addEventListener('change', updateWatermark);
+    fontSize.addEventListener('input', updateWatermark);
+    textColor.addEventListener('input', updateWatermark);
+    opacity.addEventListener('input', updateWatermark);
+
+    // Handle download
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'watermarked-image.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>
